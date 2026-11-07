@@ -28,9 +28,9 @@ export const PLANS: Plan[] = [
     unit: "per scout / month",
     cta: { label: "Get started", to: "signup" },
     includes: [
-      "Briefs in plain English, read by Claude",
-      "Ranked shortlists that show why",
-      "1–20 attribute sheets and radar comparisons",
+      "Briefs in plain English, read by AI",
+      "Real, current players found live on the web",
+      "Player photos, season stats and sources",
       "Scouting reports with every claim checked",
       "The scout assistant",
     ],
@@ -52,17 +52,17 @@ export const PLANS: Plan[] = [
     price: "Custom",
     unit: "annual contract",
     cta: { label: "Talk to us", to: "contact" },
-    includes: ["Everything in Club", "Unlimited scout accounts", "Help connecting your own data provider", "Invoicing and contract terms"],
+    includes: ["Everything in Club", "Unlimited scout accounts", "Help connecting a licensed data provider", "Invoicing and contract terms"],
   },
 ];
 
 /** Feature-by-plan table on the pricing page. */
 export const COMPARISON: { feature: string; values: [string | boolean, string | boolean, string | boolean] }[] = [
   { feature: "Scout accounts", values: ["1", "Up to 10", "Unlimited"] },
-  { feature: "Plain-English briefs (Claude)", values: [true, true, true] },
-  { feature: "Explainable ranked shortlists", values: [true, true, true] },
-  { feature: "1–20 attribute sheets, ability stars", values: [true, true, true] },
-  { feature: "Radar comparisons with similar and cheaper players", values: [true, true, true] },
+  { feature: "Plain-English briefs (AI)", values: [true, true, true] },
+  { feature: "Live web search for real players", values: [true, true, true] },
+  { feature: "Player photos, season stats and sources", values: [true, true, true] },
+  { feature: "Favourites tactic board", values: [true, true, true] },
   { feature: "Scouting reports with claim checks", values: [true, true, true] },
   { feature: "Scout assistant chat", values: [true, true, true] },
   { feature: "Onboarding session", values: [false, true, true] },

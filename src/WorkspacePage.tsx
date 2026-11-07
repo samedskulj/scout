@@ -2,24 +2,24 @@
 
 import { LogOut } from "lucide-react";
 import { useState } from "react";
-import type { AiSource } from "../shared/types.ts";
 import { useAuth } from "./auth/AuthProvider.tsx";
+import { useFavourites } from "./scout/favourites.ts";
+import { FavouritesBoard } from "./scout/FavouritesBoard.tsx";
 import { SearchView } from "./SearchView.tsx";
-import { UnderTheHood } from "./UnderTheHood.tsx";
 import { AppShell } from "./ui/index.ts";
 
-type View = "scout" | "hood";
-const TABS = [
-  { value: "scout" as const, label: "Scouting" },
-  { value: "hood" as const, label: "Under the hood" },
-];
+type View = "scout" | "favourites";
 
 /** The signed-in scouting workspace at /app. */
 export function WorkspacePage() {
   const [view, setView] = useState<View>("scout");
-  // Undefined = the server's default (Claude when a key is configured).
-  const [engine, setEngine] = useState<AiSource>();
   const { session, signOut } = useAuth();
+  const favourites = useFavourites(session?.user.id);
+
+  const tabs = [
+    { value: "scout" as const, label: "Scouting" },
+    { value: "favourites" as const, label: favourites.players.length ? `Favourites · ${favourites.players.length}` : "Favourites" },
+  ];
 
   const account = session ? (
     <div className="account">
@@ -33,20 +33,12 @@ export function WorkspacePage() {
   ) : null;
 
   return (
-    <AppShell
-      title="Scout Copilot"
-      tagline="Recruitment centre"
-      tabs={TABS}
-      activeTab={view}
-      onTabChange={setView}
-      keywordsChosen={engine === "offline"}
-      account={account}
-    >
-      {/* Keep the workspace mounted so a brief and chat survive a look under the hood. */}
+    <AppShell title="Scout Copilot" tagline="Recruitment centre" tabs={tabs} activeTab={view} onTabChange={setView} account={account}>
+      {/* Keep the workspace mounted so a brief and chat survive a visit to the board. */}
       <div hidden={view !== "scout"} className="view">
-        <SearchView engine={engine} onEngineChange={setEngine} />
+        <SearchView favourites={favourites} />
       </div>
-      {view === "hood" && <UnderTheHood />}
+      {view === "favourites" && <FavouritesBoard favourites={favourites} onGoScouting={() => setView("scout")} />}
     </AppShell>
   );
 }

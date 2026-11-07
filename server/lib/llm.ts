@@ -20,7 +20,7 @@ export class LlmError extends Error {
 
 export const model = (): string => process.env.CLAUDE_MODEL ?? DEFAULT_MODEL;
 
-/** Live mode = we have credentials for the Claude API. Otherwise apps run their offline fallbacks. */
+/** Live mode = we have credentials for the Claude API. Without them the AI routes answer 503. */
 export const isLive = (): boolean =>
   Boolean(process.env.ANTHROPIC_API_KEY || process.env.ANTHROPIC_AUTH_TOKEN);
 
@@ -64,9 +64,9 @@ export async function generateStructured<T>({
     ...fallbackParams(),
   });
 
-  if (response.stop_reason === "refusal") throw new LlmError("Claude declined this request.");
-  if (response.stop_reason === "max_tokens") throw new LlmError("Claude's response was cut off.");
-  if (!response.parsed_output) throw new LlmError("Claude's response did not match the expected schema.");
+  if (response.stop_reason === "refusal") throw new LlmError("The AI declined this request.");
+  if (response.stop_reason === "max_tokens") throw new LlmError("The AI's response was cut off.");
+  if (!response.parsed_output) throw new LlmError("The AI's response did not match the expected schema.");
 
   await writeCache(key, response.parsed_output);
   return response.parsed_output;

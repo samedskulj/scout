@@ -9,13 +9,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { ability } from "../../shared/attributes.ts";
-import { ordinal } from "../../shared/format.ts";
-import { KEY_METRICS, METRICS, POSITIONS, type DemoResponse, type PlayerProfile } from "../../shared/types.ts";
+import { dash, eur } from "../../shared/format.ts";
+import type { DemoResponse, ScoutPlayer } from "../../shared/types.ts";
 import { useAuth } from "../auth/AuthProvider.tsx";
 import { authEnabled, supabase } from "../auth/supabase.ts";
-import { Attr, Stars } from "../scout/Ratings.tsx";
-import { apiPost } from "../ui/api.ts";
+import { Avatar, ClubBadge } from "../scout/bits.tsx";
+import { apiStream } from "../ui/api.ts";
 import { DEMO_BRIEFS } from "./LiveDemo.tsx";
 
 type Mode = "signin" | "signup" | "reset" | "update";
@@ -228,16 +227,15 @@ export function LoginPage() {
   );
 }
 
-/** The other half of the page: a real player from the demo, as the workspace shows him. */
+/** The other half of the page: a real player from today's demo search, as the workspace shows him. */
 function LoginShowcase() {
-  const [player, setPlayer] = useState<PlayerProfile | null>(null);
+  const [player, setPlayer] = useState<ScoutPlayer | null>(null);
   useEffect(() => {
-    apiPost<DemoResponse>("/api/demo", { query: DEMO_BRIEFS[1] }).then(
-      (res) => setPlayer(res.matches[0]?.player ?? null),
+    apiStream<DemoResponse>("/api/demo", { query: DEMO_BRIEFS[1] }).then(
+      (res) => setPlayer(res.players[0] ?? null),
       () => setPlayer(null),
     );
   }, []);
-  const a = player ? ability(player) : null;
   return (
     <aside
       className="relative hidden flex-col justify-center gap-7 overflow-hidden border-l bg-card bg-[radial-gradient(ellipse_80%_60%_at_70%_20%,rgb(124_134_255/0.2),transparent_70%)] px-14 py-16 lg:flex"
@@ -246,27 +244,28 @@ function LoginShowcase() {
       <p className="max-w-[20ch] font-heading text-[clamp(26px,2.6vw,36px)] leading-[1.15] font-bold tracking-tight">
         “Pressing striker under 26 from the Eredivisie or Liga Portugal.”
       </p>
-      {player && a && (
-        <div className="grid max-w-[420px] gap-2.5 rounded-2xl border border-input bg-background p-6 shadow-[0_40px_80px_-30px_rgb(0_0_0/0.7)]">
-          <p className="text-xl leading-tight font-bold tracking-tight">{player.name}</p>
-          <p className="text-[13px] text-muted-foreground">
-            {POSITIONS[player.position]} · {player.club} · {player.age}
-          </p>
-          <Stars current={a.current} potential={a.potential} size="lg" />
+      {player && (
+        <div className="grid max-w-[420px] gap-2.5 rounded-2xl border border-input bg-background p-6 shadow-[0_40px_80px_-30px_rgb(0_0_0/0.7)] [.light_&]:shadow-[0_40px_80px_-30px_rgb(18_21_26/0.25)]">
+          <div className="flex items-center gap-3.5">
+            <Avatar player={player} size={60} prefer="cutout" />
+            <div className="min-w-0">
+              <p className="text-xl leading-tight font-bold tracking-tight">{player.name}</p>
+              <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                <ClubBadge src={player.clubBadge} size={14} /> {player.club ?? "Club unknown"} · {dash(player.age)} · {eur(player.market_value_eur_m)}
+              </p>
+            </div>
+          </div>
           <ul className="mt-1.5">
-            {KEY_METRICS[player.position].map((m) => (
-              <li key={m} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2.5 border-b py-2 text-sm last:border-b-0">
-                <span>{METRICS[m].short}</span>
-                <small className="text-[12.5px] text-muted-foreground">{ordinal(player.percentiles[m])}</small>
-                <Attr percentile={player.percentiles[m]} metric={m} player={player} />
+            {player.key_stats.slice(0, 5).map((s) => (
+              <li key={s.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b py-2 text-sm last:border-b-0">
+                <span>{s.label}</span>
+                <b className="font-cond text-[15px]">{s.value}</b>
               </li>
             ))}
           </ul>
         </div>
       )}
-      <p className="max-w-[46ch] text-sm text-muted-foreground">
-        The top match for that brief, from the demo database. Every number is a percentile you can trace.
-      </p>
+      <p className="max-w-[46ch] text-sm text-muted-foreground">The top match for that brief, found on today's web. Every number links back to its source in the app.</p>
     </aside>
   );
 }

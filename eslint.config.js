@@ -11,7 +11,7 @@ const config = [
     languageOptions: { globals: { ...globals.browser, ...globals.node } },
     rules: {
       "@typescript-eslint/consistent-type-imports": "error",
-      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "@typescript-eslint/no-unused-vars": ["error", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       // Apostrophes and quotes in JSX copy are fine; escaping them hurts readability.
       "react/no-unescaped-entities": "off",
     },

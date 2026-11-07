@@ -13,8 +13,6 @@
     "lint": "eslint .",
     "test": "vitest run",
     "check": "npm run typecheck && npm run lint && npm test",
-    "eval": "tsx evals/run.ts",
-    "generate": "tsx scripts/generate-players.ts",
     "start": "next start -p 5174"
   },
   "dependencies": {

@@ -50,7 +50,7 @@ export function SiteFooter() {
         <div className="mt-12 flex flex-col justify-between gap-4 border-t pt-8 text-[13px] text-faint md:flex-row md:items-center">
           <p>© {new Date().getFullYear()} Scout Copilot.</p>
           <p className="max-w-2xl md:text-right">
-            The demo database contains fictional players and clubs. Reports and briefs are read and written with Anthropic&apos;s Claude.
+            Player facts are found live on the web by AI, each with its source. Photos and badges: TheSportsDB.
           </p>
         </div>
       </div>

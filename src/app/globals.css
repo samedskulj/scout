@@ -7,11 +7,12 @@
    ramp, status colours) are defined in styles.css and exposed to Tailwind below. */
 @import "../ui/styles.css" layer(components);
 @import "../scout.css" layer(components);
+@import "../scout/board.css" layer(components);
 
 @custom-variant dark (&:is(.dark *));
 
-/* Scout Copilot is dark-only: graphite surfaces, one indigo brand colour, white primary actions.
-   shadcn/ui's semantic tokens map onto the design tokens in DESIGN.md. */
+/* Scout Copilot is dark by default (graphite surfaces, one indigo brand colour, white primary actions) with a
+   light theme under :root.light. shadcn/ui's semantic tokens map onto the design tokens in DESIGN.md. */
 :root {
   --background: #0a0b0e; /* ground */
   --foreground: #f3f4f6; /* text */
@@ -52,6 +53,40 @@
   --font-heading: "Cabinet Grotesk", "Satoshi", ui-sans-serif, system-ui, sans-serif;
   --font-cond: var(--font-barlow-condensed), "Satoshi", system-ui, sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+:root.light {
+  --background: #f4f5f7;
+  --foreground: #12151a;
+  --card: #ffffff;
+  --card-foreground: #12151a;
+  --popover: #ffffff;
+  --popover-foreground: #12151a;
+  --primary: #12151a; /* in light mode the primary action is ink on paper */
+  --primary-foreground: #ffffff;
+  --secondary: #f0f2f5;
+  --secondary-foreground: #12151a;
+  --muted: #f0f2f5;
+  --muted-foreground: #4f5764;
+  --accent: #e6e9ee;
+  --accent-foreground: #12151a;
+  --destructive: #c13c28;
+  --border: #e1e4e9;
+  --input: #ccd1d9;
+  --ring: #4c58d6;
+  --chart-1: #4c58d6;
+  --chart-2: #0a7594;
+  --chart-3: #1c7f45;
+  --chart-4: #9a5f06;
+  --chart-5: #c13c28;
+  --sidebar: #ffffff;
+  --sidebar-foreground: #12151a;
+  --sidebar-primary: #4c58d6;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #e6e9ee;
+  --sidebar-accent-foreground: #12151a;
+  --sidebar-border: #e1e4e9;
+  --sidebar-ring: #4c58d6;
 }
 
 @theme inline {

@@ -5,31 +5,14 @@ import Link from "next/link";
 import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ability } from "../../shared/attributes.ts";
-import { money, ordinal } from "../../shared/format.ts";
-import { KEY_METRICS, METRICS, POSITIONS, type DemoResponse, type SearchSpec } from "../../shared/types.ts";
-import { Attr, Stars } from "../scout/Ratings.tsx";
-import { apiPost, asApiError } from "../ui/api.ts";
+import { dash, eur } from "../../shared/format.ts";
+import { EXAMPLE_BRIEFS, POSITIONS, type DemoResponse } from "../../shared/types.ts";
+import { Avatar, ClubBadge, FitScore, SearchLog, SourceList } from "../scout/bits.tsx";
+import { apiStream, asApiError } from "../ui/api.ts";
 
-export const DEMO_BRIEFS = [
-  "Left-footed centre-back under 24, comfortable on the ball, max £30m",
-  "Pressing striker under 26 from the Eredivisie or Liga Portugal",
-  "Creative number 10 who can dribble, under £20m",
-];
+export const DEMO_BRIEFS = EXAMPLE_BRIEFS.slice(0, 3);
 
 const SETTLE = "animate-[row-settle_320ms_cubic-bezier(0.16,1,0.3,1)_both]";
-
-function readChips(s: SearchSpec): string[] {
-  return [
-    ...(s.positions.length ? s.positions.map((p) => POSITIONS[p]) : ["Any position"]),
-    s.foot !== "any" ? `${s.foot === "left" ? "Left" : "Right"} foot` : null,
-    s.max_age !== null ? `Age ≤ ${s.max_age}` : null,
-    s.min_age !== null ? `Age ${s.min_age}+` : null,
-    s.max_value_m !== null ? `≤ ${money(s.max_value_m)}` : null,
-    ...s.leagues,
-    ...s.priorities.map((p) => METRICS[p.metric].short),
-  ].filter((x): x is string => Boolean(x));
-}
 
 function Step({ n, id, children, aside }: { n: number; id: string; children: ReactNode; aside?: ReactNode }) {
   return (
@@ -41,12 +24,13 @@ function Step({ n, id, children, aside }: { n: number; id: string; children: Rea
   );
 }
 
-/** The hero: a working brief → shortlist → player strip on the public keyword engine. */
+/** The hero: a working brief → real players found live on the web → one player's card. */
 export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void }) {
   const [query, setQuery] = useState(DEMO_BRIEFS[0]!);
   const [data, setData] = useState<DemoResponse | null>(null);
   const [selected, setSelected] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [lines, setLines] = useState<string[]>([]);
   const [error, setError] = useState<string>();
   const [run, setRun] = useState(0);
 
@@ -54,8 +38,9 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
     async (q: string) => {
       setLoading(true);
       setError(undefined);
+      setLines([]);
       try {
-        const res = await apiPost<DemoResponse>("/api/demo", { query: q });
+        const res = await apiStream<DemoResponse>("/api/demo", { query: q }, (l) => setLines((x) => [...x, l]));
         setData(res);
         setSelected(0);
         setRun((n) => n + 1);
@@ -69,10 +54,10 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
     [onResult],
   );
 
-  // First load: run the default brief so the strip is never empty.
+  // First load: run the default brief (cached for the day) so the strip is never empty.
   useEffect(() => {
     let cancelled = false;
-    apiPost<DemoResponse>("/api/demo", { query: DEMO_BRIEFS[0] }).then(
+    apiStream<DemoResponse>("/api/demo", { query: DEMO_BRIEFS[0] }, (l) => !cancelled && setLines((x) => [...x, l])).then(
       (res) => {
         if (cancelled) return;
         setData(res);
@@ -92,12 +77,10 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
-    if (query.trim().length >= 3) void runBrief(query);
+    if (query.trim().length >= 3 && !loading) void runBrief(query);
   };
 
-  const match = data?.matches[selected];
-  const p = match?.player;
-  const a = p ? ability(p) : null;
+  const p = data?.players[selected];
 
   return (
     <div
@@ -124,7 +107,7 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
             className="w-full resize-none rounded-xl border border-input bg-background px-3.5 py-3 text-base leading-normal font-medium caret-brand outline-none transition-[border-color,box-shadow] focus:border-brand focus:ring-3 focus:ring-brand-soft"
           />
           <Button type="submit" className="mt-2.5 h-10 w-full rounded-xl" disabled={loading || query.trim().length < 3}>
-            {loading ? "Ranking players…" : "Run this brief"}
+            {loading ? "Searching the web…" : "Run this brief"}
             <CornerDownLeft />
           </Button>
         </form>
@@ -133,11 +116,12 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
             <button
               key={b}
               type="button"
+              disabled={loading}
               onClick={() => {
                 setQuery(b);
                 void runBrief(b);
               }}
-              className="rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] leading-snug text-muted-foreground transition-colors hover:border-input hover:bg-secondary hover:text-foreground"
+              className="rounded-lg border px-2.5 py-1.5 text-left text-[12.5px] leading-snug text-muted-foreground transition-colors hover:border-input hover:bg-secondary hover:text-foreground disabled:opacity-60"
             >
               {b}
             </button>
@@ -147,7 +131,7 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
           <div className="mt-4 border-t pt-3.5">
             <h3 className="mb-2 text-[11.5px] font-semibold tracking-wider text-faint uppercase">Read as</h3>
             <ul className="flex flex-wrap gap-1.5">
-              {readChips(data.spec).map((c) => (
+              {[...new Set([...data.read.positions.map((x) => POSITIONS[x]), ...data.read.filters])].map((c) => (
                 <li key={c} className="rounded-full bg-brand-soft px-2.5 py-1 text-[12.5px] font-medium text-brand-strong">
                   {c}
                 </li>
@@ -158,78 +142,80 @@ export function LiveDemo({ onResult }: { onResult?: (res: DemoResponse) => void 
       </section>
 
       <section className="order-3 min-w-0 bg-card p-5 md:col-span-2 lg:order-none lg:col-span-1" aria-labelledby="demo-2">
-        <Step n={2} id="demo-2" aside={data && `${data.total} players fit`}>
+        <Step n={2} id="demo-2" aside={data && !loading && `${data.players.length} real players · ${data.searchedAt}`}>
           The shortlist
         </Step>
+        {loading && <SearchLog lines={lines} title="Searching the web for players" />}
         {error && <p className="rounded-xl border border-dashed border-input p-3 text-bad">{error}</p>}
-        {data && data.matches.length === 0 && (
+        {!loading && data && data.players.length === 0 && (
           <p className="rounded-xl border border-dashed border-input p-3 text-muted-foreground">
-            Nobody fits every filter. Loosen the brief and run it again.
+            Nobody fit every requirement with a source to back it. Loosen the brief and run it again.
           </p>
         )}
-        <ol key={run} className="grid gap-1.5">
-          {data?.matches.map((m, i) => {
-            const isSelected = i === selected;
-            return (
-              <li key={m.player.id} className={SETTLE} style={{ animationDelay: `${i * 45}ms` }}>
-                <button
-                  onClick={() => setSelected(i)}
-                  aria-pressed={isSelected}
-                  className={cn(
-                    "grid w-full grid-cols-[22px_minmax(0,1fr)_38px] items-center gap-3 rounded-xl border border-transparent bg-secondary px-3 py-2.5 text-left transition-colors hover:border-input sm:grid-cols-[22px_minmax(0,1fr)_auto_38px]",
-                    isSelected && "border-brand/45 bg-brand-soft hover:border-brand/45",
-                  )}
-                >
-                  <span className={cn("text-center text-[13px] font-semibold text-faint", isSelected && "text-brand-strong")}>{i + 1}</span>
-                  <span className="grid min-w-0 gap-0.5">
-                    <b className="truncate text-[14.5px] font-semibold tracking-tight">{m.player.name}</b>
-                    <small className="text-xs leading-snug text-muted-foreground">
-                      {m.player.position} · {m.player.club} · {m.player.age} · {money(m.player.market_value_m)}
-                    </small>
-                  </span>
-                  <span className="hidden flex-col items-end gap-1 text-xs font-medium whitespace-nowrap text-muted-foreground sm:flex">
-                    {m.reasons.slice(0, 2).map((r) => (
-                      <span key={r.metric} className="flex items-center gap-1">
-                        {METRICS[r.metric].short} <Attr percentile={r.percentile} metric={r.metric} player={m.player} />
-                      </span>
-                    ))}
-                  </span>
-                  <span className="text-right font-cond text-[22px] leading-none font-bold">{m.score}</span>
-                </button>
-              </li>
-            );
-          })}
-        </ol>
+        {!loading && (
+          <ol key={run} className="grid gap-1.5">
+            {data?.players.map((pl, i) => {
+              const isSelected = i === selected;
+              return (
+                <li key={pl.id} className={SETTLE} style={{ animationDelay: `${i * 45}ms` }}>
+                  <button
+                    onClick={() => setSelected(i)}
+                    aria-pressed={isSelected}
+                    className={cn(
+                      "grid w-full grid-cols-[22px_36px_minmax(0,1fr)_38px] items-center gap-3 rounded-xl border border-transparent bg-secondary px-3 py-2.5 text-left transition-colors hover:border-input",
+                      isSelected && "border-brand/45 bg-brand-soft hover:border-brand/45",
+                    )}
+                  >
+                    <span className={cn("text-center text-[13px] font-semibold text-faint", isSelected && "text-brand-strong")}>{i + 1}</span>
+                    <Avatar player={pl} size={36} />
+                    <span className="grid min-w-0 gap-0.5">
+                      <b className="truncate text-[14.5px] font-semibold tracking-tight">{pl.name}</b>
+                      <small className="truncate text-xs leading-snug text-muted-foreground">
+                        {pl.position} · {pl.club ?? "Club unknown"} · {dash(pl.age)} · {eur(pl.market_value_eur_m)}
+                      </small>
+                    </span>
+                    <FitScore fit={pl.fit} />
+                  </button>
+                </li>
+              );
+            })}
+          </ol>
+        )}
       </section>
 
       <section className="min-w-0 bg-card p-5" aria-labelledby="demo-3">
         <Step n={3} id="demo-3">
           The player
         </Step>
-        {p && a && (
+        {p && !loading && (
           <div key={p.id} className={SETTLE}>
-            <p className="text-[22px] leading-tight font-bold tracking-tight">{p.name}</p>
-            <p className="mt-1 mb-3.5 text-[13px] text-muted-foreground">
-              {POSITIONS[p.position]} · {p.club} · {p.league}
-            </p>
-            <div className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-[11px] font-semibold tracking-wider text-faint uppercase">
-              <span>Ability</span>
-              <Stars current={a.current} />
-              <span>Potential (est.)</span>
-              <Stars current={a.current} potential={a.potential} />
+            <div className="flex items-center gap-3">
+              <Avatar player={p} size={56} prefer="cutout" />
+              <div className="min-w-0">
+                <p className="text-[20px] leading-tight font-bold tracking-tight">{p.name}</p>
+                <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+                  <ClubBadge src={p.clubBadge} size={14} /> {[p.club, p.league].filter(Boolean).join(" · ")}
+                </p>
+              </div>
             </div>
-            <ul className="mt-4">
-              {KEY_METRICS[p.position].map((m) => (
-                <li key={m} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
-                  <span>{METRICS[m].short}</span>
-                  <small className="text-xs text-muted-foreground">
-                    {p.metrics[m]}
-                    {METRICS[m].unit} · {ordinal(p.percentiles[m])}
-                  </small>
-                  <Attr percentile={p.percentiles[m]} metric={m} player={p} />
+            <p className="mt-3 text-[13.5px] leading-relaxed">{p.fit_reason}</p>
+            <ul className="mt-3">
+              <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
+                <span>{p.season} league</span>
+                <b className="font-cond text-[15px]">
+                  {dash(p.appearances)} apps · {dash(p.goals)} G · {dash(p.assists)} A
+                </b>
+              </li>
+              {p.key_stats.slice(0, 4).map((s) => (
+                <li key={s.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
+                  <span>{s.label}</span>
+                  <b className="font-cond text-[15px]">{s.value}</b>
                 </li>
               ))}
             </ul>
+            <div className="mt-3">
+              <SourceList sources={p.sources.slice(0, 3)} compact />
+            </div>
             <Link href="/app" className="group mt-4 inline-flex items-center gap-1.5 text-[13.5px] font-semibold text-brand-strong">
               Open his full profile and report <ArrowRight className="size-4 transition-transform group-hover:translate-x-0.5" />
             </Link>

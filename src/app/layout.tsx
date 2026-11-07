@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Barlow_Condensed, Geist_Mono } from "next/font/google";
+import Script from "next/script";
 import type { ReactNode } from "react";
 import { AuthProvider } from "@/auth/AuthProvider";
+import { THEME_SCRIPT } from "@/ui/theme";
 import "./globals.css";
 
 /** Rating numerals only (see DESIGN.md, "The Condensed Is For Numbers Rule"). */
@@ -22,12 +24,22 @@ export const metadata: Metadata = {
     "Plain-English player scouting: the AI reads the brief, code ranks every player on the numbers, and every report claim is checked.",
 };
 
-export const viewport: Viewport = { themeColor: "#0a0b0e", colorScheme: "dark" };
+export const viewport: Viewport = {
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#0a0b0e" },
+    { media: "(prefers-color-scheme: light)", color: "#f6f7f9" },
+  ],
+  colorScheme: "dark light",
+};
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en" className={`dark ${barlowCondensed.variable} ${geistMono.variable}`}>
+    // The theme class is set before paint by THEME_SCRIPT, so the server-rendered class differs on purpose.
+    <html lang="en" className={`dark ${barlowCondensed.variable} ${geistMono.variable}`} suppressHydrationWarning>
       <head>
+        <Script id="theme" strategy="beforeInteractive">
+          {THEME_SCRIPT}
+        </Script>
         <link rel="preconnect" href="https://api.fontshare.com" />
         <link rel="preconnect" href="https://cdn.fontshare.com" crossOrigin="anonymous" />
         <link rel="stylesheet" href={FONTSHARE_CSS} />

@@ -26,21 +26,19 @@ The AI interprets and writes; code ranks and verifies. Rankings are weighted per
 
 ## Operating Context
 
-- 300 fictional players across 8 leagues and 25 fictional clubs, generated with a fixed seed (`scripts/generate-players.ts`).
-- 12 metrics per player, per 90 minutes or as percentages. Percentiles are against the same position.
-- With an ANTHROPIC_API_KEY, Claude interprets briefs, writes reports and runs the assistant. Without one, or when Claude is unavailable and the scout switches engines, a keyword parser, a report template and a keyword-search assistant take over.
-- A query-interpretation eval (`npm run eval`) scores 8 briefs.
+- Every brief, profile and assistant answer is researched live on the web by the AI and cached per day. A brief takes roughly 30-90 seconds; progress streams to the screen.
+- Market values are in € (Transfermarkt or, failing that, FootballTransfers/Sofascore). Any position including goalkeepers, any league.
+- Claude interprets briefs, writes reports, runs the assistant and powers the landing demo; there is no non-AI fallback. Without an ANTHROPIC_API_KEY those routes answer 503.
+- Scouts star favourites and arrange them on a tactic board (formations, drag to swap or reposition, fit per slot), saved in their browser.
 
 ## Capabilities and Constraints
 
-- Outfield players only, no goalkeepers. Players with under 900 minutes are excluded from rankings.
 - No adjustment for league strength in the stats yet.
-- Market values are in £ millions and fictional.
 
 ## Evidence on Hand
 
-- Offline keyword parser: 24/28 query checks. Claude score to be measured; do not quote it before then.
-- All players and clubs are fictional; there are no real data feeds, customers or testimonials.
+- Claude's brief-reading score (`npm run eval`) is still to be measured; do not quote one before then.
+- Player data is real and current, found per request by the AI with live web search (Transfermarkt, FBref, league and club sites, news); each fact carries its source URL, unknowns are null. Photos and badges come from TheSportsDB. No customers or testimonials.
 
 ## Product Principles
 

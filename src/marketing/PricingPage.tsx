@@ -11,7 +11,7 @@ const PRICING_FAQ = [
   },
   {
     q: "Is the data real?",
-    a: "This version ships with a demo database of fictional players so you can try everything. Connecting your own data provider is part of Enterprise.",
+    a: "Every plan finds real, current players with live web search, each fact linked to its source. Connecting a licensed data provider (Opta, Wyscout and similar) is part of Enterprise.",
   },
   {
     q: "What does an account include?",
@@ -66,7 +66,7 @@ export function PricingPage() {
             </TableHeader>
             <TableBody>
               {COMPARISON.map((row) => (
-                <TableRow key={row.feature} className="hover:bg-white/[0.015]">
+                <TableRow key={row.feature} className="hover:bg-secondary/50">
                   <TableHead scope="row" className="h-auto px-5 py-4 font-normal whitespace-normal text-foreground">
                     {row.feature}
                   </TableHead>

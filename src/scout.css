@@ -35,7 +35,7 @@
 .pane-section { padding: 14px 16px; }
 .section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 8px; }
 
-/* ---------- Claude's read ---------- */
+/* ---------- The AI's read of the brief ---------- */
 .read { flex: none; max-height: 64%; overflow: auto; border-bottom: 1px solid var(--line); }
 .read-explanation { font-size: 13.5px; color: var(--text); margin-bottom: 8px; }
 .read-grid { display: grid; grid-template-columns: 112px 1fr; gap: 12px; align-items: center; margin: 2px 0 8px; }
@@ -133,7 +133,7 @@
 .shortlist .sort svg { width: 12px; height: 12px; }
 .shortlist th.num .sort { justify-content: flex-end; }
 .shortlist tbody tr { cursor: pointer; transition: background-color 120ms ease-out; }
-.shortlist tbody tr:nth-child(even) { background: rgb(255 255 255 / 0.018); }
+.shortlist tbody tr:nth-child(even) { background: var(--zebra); }
 .shortlist tbody tr:hover { background: var(--panel-2); }
 .shortlist tbody tr.selected { background: var(--brand-soft); }
 .shortlist tbody tr.selected .rank-col, .shortlist tbody tr.selected .player-name { color: var(--brand); }
@@ -174,7 +174,7 @@
 .stars svg { position: absolute; inset: 0; width: 100%; height: 100%; }
 .stars-lg { width: 110px; height: 19px; }
 .stars-track { fill: var(--panel-3); }
-.stars-potential { fill: rgb(243 244 246 / 0.32); }
+.stars-potential { fill: var(--stars-potential); }
 .stars-current { fill: var(--text); }
 
 /* ---------- Profile ---------- */
@@ -247,23 +247,6 @@
 .skeleton { gap: 12px; }
 .skeleton i { display: block; height: 14px; border-radius: 5px; background: var(--panel-2); animation: pulse 1.2s ease-in-out infinite; }
 
-/* ---------- Under the hood ---------- */
-.hood { max-width: 1160px; margin: 0 auto; padding: 28px 20px 48px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr); gap: 32px; align-items: start; }
-.hood section { display: grid; gap: 14px; }
-.hood h2 { font-size: 15px; color: var(--text); }
-.method { list-style: none; margin: 0; padding: 0; counter-reset: m; display: grid; gap: 16px; }
-.method li { counter-increment: m; display: grid; grid-template-columns: 30px 1fr; gap: 2px 0; }
-.method li::before { content: counter(m); grid-row: span 2; font: 700 22px/1 var(--font-cond); color: var(--brand); }
-.method h3 { font: 600 16px/1.3 var(--font-sans); }
-.method p { color: var(--text-muted); font-size: 13.5px; max-width: 62ch; }
-.eval-score { font-size: 14px; color: var(--text-muted); }
-.eval-score .cond { font-size: 28px; font-weight: 700; color: var(--text); }
-.eval-table td { font-size: 13px; }
-.eval-checks { display: flex; flex-wrap: wrap; gap: 4px; }
-.eval-check { display: inline-flex; gap: 3px; align-items: center; font: 600 12px/1 var(--font-cond); padding: 3px 6px; border-radius: 5px; }
-.eval-check svg { width: 12px; height: 12px; }
-.eval-check.pass { background: var(--good-soft); color: var(--good); }
-.eval-check.fail { background: var(--bad-soft); color: var(--bad); }
 
 /* ---------- Narrower screens: the panes stack and the page scrolls ---------- */
 @media (max-width: 1279px) {
@@ -295,7 +278,6 @@
   .profile-facts { grid-template-columns: repeat(3, minmax(0, 1fr)); }
   .sheet, .report-cols { grid-template-columns: 1fr; }
   .drivers-col { display: none; }
-  .hood { grid-template-columns: 1fr; padding: 20px 16px 40px; }
 }
 
 /* ---------- Review fixes: parked brief read, pitch key, inline drivers, board switch, row settle ---------- */

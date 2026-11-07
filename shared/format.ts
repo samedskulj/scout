@@ -1,7 +1,5 @@
-/** Shared by server templates and the UI. */
-export const ordinal = (n: number): string => {
-  const suffix = n % 100 >= 11 && n % 100 <= 13 ? "th" : (["th", "st", "nd", "rd"][n % 10] ?? "th");
-  return `${n}${suffix}`;
-};
+/** Shared by the server and the UI. */
+export const eur = (m: number | null | undefined): string =>
+  m === null || m === undefined ? "–" : m >= 1 ? `€${m % 1 === 0 ? m : m.toFixed(1)}m` : `€${Math.round(m * 1000)}k`;
 
-export const money = (m: number): string => `£${m % 1 === 0 ? m : m.toFixed(1)}m`;
+export const dash = (v: string | number | null | undefined): string => (v === null || v === undefined || v === "" ? "–" : String(v));

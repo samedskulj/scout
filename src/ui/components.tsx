@@ -2,6 +2,7 @@ import Link from "next/link";
 import type { ButtonHTMLAttributes, ReactNode } from "react";
 import { useHealth } from "./api.ts";
 import { BrandMark } from "./BrandMark.tsx";
+import { ThemeToggle } from "./theme.tsx";
 
 export { BrandMark };
 
@@ -93,17 +94,14 @@ export function Segmented<T extends string>({
   );
 }
 
-/** Shown only when the app is not on its normal AI engine; nothing is shown when Claude is running. */
-function ModeBadge({ keywordsChosen }: { keywordsChosen: boolean }) {
+/** Shown only when the server has no AI key; nothing is shown in normal operation. */
+function ModeBadge() {
   const health = useHealth();
-  if (!health || (health.live && !keywordsChosen)) return null;
+  if (!health || health.live) return null;
   return (
     <span className="engine">
-      <Badge
-        tone="warn"
-        title={health.live ? "You switched to the keyword engine; reload the page to try AI again" : "AI is not configured on the server"}
-      >
-        <span className="dot" aria-hidden /> Keyword engine
+      <Badge tone="warn" title="Add ANTHROPIC_API_KEY to the server's .env">
+        <span className="dot" aria-hidden /> AI not configured
       </Badge>
     </span>
   );
@@ -115,7 +113,6 @@ export function AppShell<T extends string>({
   tabs,
   activeTab,
   onTabChange,
-  keywordsChosen = false,
   account,
   children,
 }: {
@@ -124,7 +121,6 @@ export function AppShell<T extends string>({
   tabs?: Option<T>[];
   activeTab?: T;
   onTabChange?: (tab: T) => void;
-  keywordsChosen?: boolean;
   account?: ReactNode;
   children: ReactNode;
 }) {
@@ -150,7 +146,8 @@ export function AppShell<T extends string>({
             </button>
           ))}
         </nav>
-        <ModeBadge keywordsChosen={keywordsChosen} />
+        <ModeBadge />
+        <ThemeToggle className="masthead-theme" />
         {account}
       </header>
       <main>{children}</main>

@@ -1,221 +1,129 @@
 import type Anthropic from "@anthropic-ai/sdk";
 import { betaZodTool } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
-import { ability, attribute } from "../../shared/attributes.ts";
-import { money } from "../../shared/format.ts";
 import {
-  LEAGUES,
-  METRIC_IDS,
-  METRICS,
-  POSITIONS,
-  SearchSpecSchema,
+  ASSISTANT_TOOLS,
   type AssistantResponse,
   type AssistantStep,
   type ChatTurn,
-  type Match,
-  type PlayerProfile,
-  type SearchSpec,
+  type RealCard,
+  type ScoutPlayer,
+  type Source,
 } from "../../shared/types.ts";
 import { fallbackParams, getClient, hash, LlmError, model, readCache, writeCache } from "../lib/index.ts";
-import { findByName, getPlayer, PROFILES } from "../players.ts";
-import { search, similarPlayers, similarity } from "../search.ts";
-import { describeSpec, parseQuery } from "./offline.ts";
+import { findRealClubs, findRealPlayers } from "../realworld.ts";
+import { FoundPlayerSchema, hydratePlayers, ScoutPlayerSchema, searchQuery, today, type Job } from "./live.ts";
 
 /**
- * The scout assistant: Claude answers in chat and calls the same deterministic search and
- * profile code the rest of the app uses. It never sees a number it didn't get from a tool.
+ * The scout assistant: answers in chat with live web search, puts players it recommends on the scout's board,
+ * and shows photo cards from TheSportsDB. Every fact it states must come from a search in this conversation.
  */
 
 export interface AssistantContext {
-  selectedId: string | null;
+  selected: string | null;
   brief: string | null;
+  board: string[];
 }
 
-const SYSTEM = `You are the chief scout's assistant at a football club's recruitment department. You help a scout find and judge players in a database of ${PROFILES.length} fictional outfield players across these leagues: ${LEAGUES.join(", ")}.
-
-How the data works:
-- 12 metrics per player, per 90 minutes or as percentages. Each has a percentile against players in the same position (50 = average for the position).
-- Each metric is also shown to the scout as a 1-20 attribute (percentile / 5, rounded up), like a football management game. 16-20 is excellent, 11-15 good, 6-10 fair, 1-5 poor.
-- Ability stars (0-5) are the mean percentile over the position's key metrics. Potential stars add age-based headroom and are only an estimate.
-- Market values are in £ millions. Players under 900 minutes are left out of searches.
+const SYSTEM = `You are the scout assistant in a football club's recruitment department. You help a scout find and judge real, current players.
 
 How to work:
-- Get every fact from a tool. Never state a number, club, age or price you did not read from a tool result in this conversation.
-- Use search_players for anything that sounds like a brief. Translate football language into priorities: "ball-playing" -> prog_passes, pass_pct; "good in the air" -> aerial_pct; "presses" -> recoveries, tackles_int; "creative" -> key_passes, xa; "clinical" -> goals, xg; "ball carrier" -> prog_carries, dribbles.
-- When you recommend players, call show_shortlist so they appear on the scout's board, best first, and set focus_id to the one you'd open first.
-- If a request is outside the data (injuries, character, wages), say the database doesn't cover it.
+- Today is {today}. Use web_search for every fact: clubs, ages, values, contracts, stats, injuries, transfers. Your memory is out of date; never state a number you did not read in a search result in this conversation.
+- Good sources: Transfermarkt (values in €, contracts, foot, height), FBref or league sites (stats, per-90, xG), club sites and reputable news.
+- When you recommend players, call show_players so they appear on the scout's board, best first, with the facts you found and their source URLs. Unknown values are null.
+- lookup_real_player and lookup_club show the scout a photo or badge card. Use them when the scout asks who someone is or what a club looks like.
 
 How to reply:
-- Speak like a scout, not a data scientist. Lead with the answer.
-- Under 120 words. Name players with one or two numbers that justify the pick, e.g. "Prog. passes 17/20".
-- No markdown headings or tables; short paragraphs or a short list are fine.`;
-
-const positionLabel = (p: PlayerProfile) => POSITIONS[p.position];
-
-/** A compact line per player, enough for Claude to reason without flooding the context. */
-function playerSummary(p: PlayerProfile, score?: number) {
-  const a = ability(p);
-  return {
-    id: p.id,
-    name: p.name,
-    age: p.age,
-    position: positionLabel(p),
-    foot: p.foot,
-    club: p.club,
-    league: p.league,
-    value: money(p.market_value_m),
-    ability_stars: a.current,
-    potential_stars_estimate: a.potential,
-    ...(score !== undefined ? { match_score: score } : {}),
-  };
-}
-
-function playerDetail(p: PlayerProfile) {
-  return {
-    ...playerSummary(p),
-    nationality: p.nationality,
-    height_cm: p.height_cm,
-    minutes: p.minutes,
-    contract_until: p.contract_until,
-    attributes: Object.fromEntries(
-      METRIC_IDS.map((m) => [
-        m,
-        { label: METRICS[m].label, value: `${p.metrics[m]}${METRICS[m].unit}`, percentile: p.percentiles[m], attribute: attribute(p.percentiles[m]) },
-      ]),
-    ),
-  };
-}
-
-function resolvePlayer(ref: string): PlayerProfile | undefined {
-  return getPlayer(ref.trim()) ?? findByName(ref);
-}
-
-const SearchInput = SearchSpecSchema.omit({ explanation: true }).partial();
-
-const fullSpec = (input: z.infer<typeof SearchInput>): SearchSpec => ({
-  positions: input.positions ?? [],
-  min_age: input.min_age ?? null,
-  max_age: input.max_age ?? null,
-  foot: input.foot ?? "any",
-  max_value_m: input.max_value_m ?? null,
-  min_height_cm: input.min_height_cm ?? null,
-  leagues: input.leagues ?? [],
-  nationalities: input.nationalities ?? [],
-  priorities: input.priorities ?? [],
-  similar_to: input.similar_to ?? null,
-  max_value_ratio: input.max_value_ratio ?? null,
-  explanation: "",
-});
+- Speak like a scout. Lead with the answer. Under 150 words. Name players with one or two numbers that justify the pick.
+- You may use short bullet lists and **bold**. No headings or tables.
+- You are "the scout assistant". Never name the AI model or company behind you; if asked, say you are the app's AI assistant.`;
 
 const CachedSchema = z.object({
   reply: z.string(),
-  shortlist: z.object({ title: z.string(), ids: z.array(z.string()) }).nullable(),
-  focusId: z.string().nullable(),
-  steps: z.array(z.object({ tool: z.enum(["search_players", "get_player", "compare_players", "show_shortlist"]), summary: z.string() })),
+  board: z.object({ title: z.string(), players: z.array(ScoutPlayerSchema) }).nullable(),
+  steps: z.array(z.object({ tool: z.enum(ASSISTANT_TOOLS), summary: z.string() })),
+  cards: z.array(z.custom<RealCard>((v) => typeof v === "object" && v !== null && "kind" in v)),
+  sources: z.array(z.object({ title: z.string(), url: z.string() })),
 });
-type Cached = z.infer<typeof CachedSchema>;
 
-/** Rebuild full matches for the UI from the ids the assistant picked. */
-function hydrate(cached: Cached, scores: Map<string, number>): AssistantResponse {
-  const matches = (cached.shortlist?.ids ?? [])
-    .map((id) => getPlayer(id))
-    .filter((p): p is PlayerProfile => Boolean(p))
-    .map((p): Match => ({ player: p, score: scores.get(p.id) ?? ability(p).keyScore, reasons: [] }));
-  return {
-    reply: cached.reply,
-    shortlist: cached.shortlist && matches.length ? { title: cached.shortlist.title, matches } : null,
-    focusId: cached.focusId,
-    steps: cached.steps,
-    source: "claude",
-  };
+/** Search queries and result URLs from web search blocks, for the visible working and the source list. */
+function readSearches(message: Anthropic.Beta.BetaMessage, steps: AssistantStep[], sources: Map<string, Source>) {
+  for (const block of message.content) {
+    if (block.type === "server_tool_use" && block.name === "web_search") {
+      const q = (block.input as { query?: string })?.query;
+      if (q) steps.push({ tool: "web_search", summary: q });
+    }
+    if (block.type === "web_search_tool_result" && Array.isArray(block.content)) {
+      for (const r of block.content as { url?: string; title?: string }[]) {
+        if (r.url && !sources.has(r.url)) sources.set(r.url, { title: r.title ?? r.url, url: r.url });
+      }
+    }
+  }
 }
 
-export async function askClaude(turns: ChatTurn[], context?: AssistantContext): Promise<AssistantResponse> {
-  const selected = context?.selectedId ? getPlayer(context.selectedId) : undefined;
+export async function askAssistant(turns: ChatTurn[], context?: AssistantContext, job?: Job): Promise<AssistantResponse> {
   const contextNote = [
-    selected && `The scout has ${selected.name} (id ${selected.id}) open in the profile panel.`,
-    context?.brief && `The current brief on screen: "${context.brief}".`,
+    context?.selected && `The scout has ${context.selected} open in the profile panel.`,
+    context?.brief && `The current brief: "${context.brief}".`,
+    context?.board.length && `On the board now: ${context.board.join("; ")}.`,
   ]
     .filter(Boolean)
     .join(" ");
 
-  const key = hash({ kind: "assistant", model: model(), system: SYSTEM, turns, contextNote });
-  const scores = new Map<string, number>();
+  const key = hash({ kind: "assistant-live", model: model(), turns, contextNote, day: today() });
   const cached = await readCache(key, CachedSchema);
-  if (cached) return hydrate(cached, scores);
+  if (cached) return cached;
 
   const steps: AssistantStep[] = [];
-  let shortlist: Cached["shortlist"] = null;
-  let focusId: string | null = null;
+  const cards: RealCard[] = [];
+  const sources = new Map<string, Source>();
+  const urls = new Set<string>();
+  let board: { title: string; players: ScoutPlayer[] } | null = null;
+  let pendingBoard: { title: string; players: z.infer<typeof FoundPlayerSchema>[] } | null = null;
+  const addCard = (card: RealCard) => {
+    if (!cards.some((c) => c.kind === card.kind && c.id === card.id)) cards.push(card);
+  };
 
   const tools = [
+    { type: "web_search_20260209" as const, name: "web_search" as const, max_uses: 10 },
     betaZodTool({
-      name: "search_players",
-      description:
-        "Search the database with filters and ranking priorities. Returns the total number of matches and the top 10, ranked by weighted percentile (or by profile similarity when similar_to is set). Leave out any filter the scout didn't ask for.",
-      inputSchema: SearchInput,
-      run: (input) => {
-        const spec = fullSpec(input);
-        const res = search(spec);
-        for (const m of res.matches) scores.set(m.player.id, m.score);
-        steps.push({ tool: "search_players", summary: describeSpec(spec) || "all players" });
-        return JSON.stringify({
-          total: res.total,
-          reference_player: res.target ? playerSummary(res.target) : null,
-          top: res.matches.slice(0, 10).map((m) => ({
-            ...playerSummary(m.player, m.score),
-            drivers: m.reasons.map((r) => `${METRICS[r.metric].short} ${attribute(r.percentile)}/20 (${r.percentile}th pct)`),
-          })),
-        });
-      },
-    }),
-    betaZodTool({
-      name: "get_player",
-      description: "Full profile of one player: every metric with its value, percentile and 1-20 attribute, plus contract, minutes and the three most similar profiles.",
-      inputSchema: z.object({ player: z.string().describe("Player id (e.g. p042) or name") }),
-      run: ({ player }) => {
-        const p = resolvePlayer(player);
-        if (!p) return `No player found for "${player}".`;
-        steps.push({ tool: "get_player", summary: p.name });
-        return JSON.stringify({
-          ...playerDetail(p),
-          most_similar: similarPlayers(p, 3).map((m) => ({ ...playerSummary(m.player), similarity: m.score })),
-        });
-      },
-    }),
-    betaZodTool({
-      name: "compare_players",
-      description: "Compare 2-4 players side by side on every metric (percentile and 1-20 attribute), with profile similarity to the first player.",
-      inputSchema: z.object({ players: z.array(z.string()).min(2).max(4).describe("Player ids or names; the first is the reference") }),
-      run: ({ players }) => {
-        const found = players.map(resolvePlayer);
-        const missing = players.filter((_, i) => !found[i]);
-        if (missing.length) return `Not found: ${missing.join(", ")}.`;
-        const list = found as PlayerProfile[];
-        steps.push({ tool: "compare_players", summary: list.map((p) => p.name).join(" vs ") });
-        return JSON.stringify({
-          players: list.map((p, i) => ({ ...playerSummary(p), ...(i > 0 ? { similarity_to_first: similarity(p, list[0]!) } : {}) })),
-          metrics: Object.fromEntries(
-            METRIC_IDS.map((m) => [METRICS[m].short, list.map((p) => `${attribute(p.percentiles[m])}/20 (${p.percentiles[m]}th)`)]),
-          ),
-        });
-      },
-    }),
-    betaZodTool({
-      name: "show_shortlist",
-      description: "Put players on the scout's board, best first. Call this whenever you recommend players. Replaces the current board.",
+      name: "show_players",
+      eager_input_streaming: true,
+      description: "Put players on the scout's board, best first, replacing what's there. Call this whenever you recommend players.",
       inputSchema: z.object({
-        title: z.string().max(80).describe("Short board title, e.g. 'Cheaper alternatives to Moreira'"),
-        player_ids: z.array(z.string()).min(1).max(12),
-        focus_id: z.string().nullable().describe("The player to open in the profile panel, usually the first"),
+        title: z.string().max(80).describe("Short board title, e.g. 'Cheaper alternatives to Saka'"),
+        players: z.array(FoundPlayerSchema).min(1).max(10),
       }),
-      run: ({ title, player_ids, focus_id }) => {
-        const ids = player_ids.map((id) => resolvePlayer(id)?.id).filter((id): id is string => Boolean(id));
-        if (!ids.length) return "None of those ids exist. Use ids from search results.";
-        shortlist = { title, ids };
-        focusId = focus_id ? (resolvePlayer(focus_id)?.id ?? ids[0]!) : ids[0]!;
-        steps.push({ tool: "show_shortlist", summary: `${ids.length} players: ${title}` });
-        return `Board updated with ${ids.length} players.`;
+      run: ({ title, players }) => {
+        pendingBoard = { title, players };
+        steps.push({ tool: "show_players", summary: `${players.length} players: ${title}` });
+        return `Board updated with ${players.length} players.`;
+      },
+    }),
+    betaZodTool({
+      name: "lookup_real_player",
+      description: "Show the scout a photo card for a real footballer (from TheSportsDB): club, nationality, position, date of birth. Identity facts only.",
+      inputSchema: z.object({ name: z.string().min(2).describe("The player's name, e.g. 'Bukayo Saka'") }),
+      run: async ({ name }) => {
+        const found = await findRealPlayers(name);
+        steps.push({ tool: "lookup_real_player", summary: found?.length ? found.map((p) => p.name).join(", ") : `no match for ${name}` });
+        if (found === null) return "The photo service could not be reached.";
+        if (!found.length) return `No photo card found for "${name}".`;
+        found.slice(0, 2).forEach(addCard);
+        return JSON.stringify(found.map(({ photo: _p, cutout: _c, clubBadge: _b, ...facts }) => facts));
+      },
+    }),
+    betaZodTool({
+      name: "lookup_club",
+      description: "Show the scout a badge card for a real club (from TheSportsDB): league, country, stadium, founded.",
+      inputSchema: z.object({ name: z.string().min(2).describe("Club name, e.g. 'Benfica'") }),
+      run: async ({ name }) => {
+        const found = await findRealClubs(name);
+        steps.push({ tool: "lookup_club", summary: found?.length ? found.map((c) => c.name).join(", ") : `no match for ${name}` });
+        if (found === null) return "The badge service could not be reached.";
+        if (!found.length) return `No club called "${name}" found.`;
+        found.slice(0, 1).forEach(addCard);
+        return JSON.stringify(found.map(({ badge: _b, ...facts }) => facts));
       },
     }),
   ];
@@ -226,44 +134,49 @@ export async function askClaude(turns: ChatTurn[], context?: AssistantContext): 
       : { role: t.role, content: t.content },
   );
 
-  const final = await getClient().beta.messages.toolRunner({
+  const runner = getClient().beta.messages.toolRunner({
     model: model(),
     max_tokens: 16000,
-    max_iterations: 8,
-    system: SYSTEM,
+    max_iterations: 20,
+    system: SYSTEM.replace("{today}", today()),
     tools,
     messages,
     output_config: { effort: "medium" },
+    stream: true,
     ...fallbackParams(),
-  });
+  }, { signal: job?.signal });
 
-  if (final.stop_reason === "refusal") throw new LlmError("Claude declined this request.");
-  if (final.stop_reason === "max_tokens") throw new LlmError("Claude's response was cut off.");
+  let final: Anthropic.Beta.BetaMessage | undefined;
+  for await (const stream of runner) {
+    stream.on("contentBlock", (block) => {
+      const q = searchQuery(block);
+      if (q) job?.progress?.(`Searching: ${q}`);
+    });
+    const message = await stream.finalMessage();
+    readSearches(message, steps, sources);
+    for (const s of sources.values()) urls.add(s.url);
+    final = message;
+  }
+  if (!final) throw new LlmError("The assistant didn't answer. Try again.");
+  if (final.stop_reason === "refusal") throw new LlmError("The AI declined this request.");
+  if (final.stop_reason === "max_tokens") throw new LlmError("The AI's response was cut off.");
+
+  const shown = pendingBoard as { title: string; players: z.infer<typeof FoundPlayerSchema>[] } | null;
+  if (shown) board = { title: shown.title, players: await hydratePlayers(shown.players, urls) };
+
   const reply = final.content
     .filter((b): b is Anthropic.Beta.BetaTextBlock => b.type === "text")
     .map((b) => b.text)
-    .join("\n")
+    .join("")
     .trim();
 
-  const result: Cached = { reply: reply || "Done. The board is updated.", shortlist, focusId, steps };
-  await writeCache(key, result);
-  return hydrate(result, scores);
-}
-
-/** No API key: read the last message as a brief with the keyword parser and show the top of the search. */
-export function askOffline(turns: ChatTurn[]): AssistantResponse {
-  const last = [...turns].reverse().find((t) => t.role === "user")?.content ?? "";
-  const spec = parseQuery(last);
-  const res = search(spec);
-  const top = res.matches.slice(0, 8);
-  const summary = describeSpec(spec) || "all players";
-  return {
-    reply: top.length
-      ? `Offline mode, so I can only match keywords. I read that as: ${summary}. ${res.total} players fit; the top ${top.length} are on the board. Add an Anthropic API key for the full assistant.`
-      : `Offline mode, so I can only match keywords, and nothing fits "${summary}". Try loosening the brief, or add an Anthropic API key for the full assistant.`,
-    shortlist: top.length ? { title: `Keyword search: ${summary}`, matches: top } : null,
-    focusId: top[0]?.player.id ?? null,
-    steps: [{ tool: "search_players", summary }],
-    source: "offline",
+  const result: AssistantResponse = {
+    reply: reply || (board ? "Done. The board is updated." : "I couldn't find anything reliable on that."),
+    board,
+    steps,
+    cards,
+    sources: [...sources.values()].slice(0, 8),
   };
+  await writeCache(key, result);
+  return result;
 }

@@ -28,11 +28,11 @@ export function createApi() {
 /** Turn API failures into a sentence a user can act on. */
 export function explainClaudeError(err: InstanceType<typeof Anthropic.APIError>): string {
   const detail = (err.error as { error?: { message?: string } } | undefined)?.error?.message ?? err.message;
-  if (/credit balance/i.test(detail)) return "Claude couldn't run: the API account has no credit left.";
-  if (err.status === 401) return "Claude couldn't run: the API key was rejected.";
-  if (err.status === 429) return "Claude is rate-limited right now. Try again in a minute.";
-  if (err.status && err.status >= 500) return "Claude is temporarily unavailable. Try again shortly.";
-  return `Claude couldn't run: ${detail}`;
+  if (/credit balance/i.test(detail)) return "The AI couldn't run: the API account has no credit left.";
+  if (err.status === 401) return "The AI couldn't run: the API key was rejected.";
+  if (err.status === 429) return "The AI is rate-limited right now. Try again in a minute.";
+  if (err.status && err.status >= 500) return "The AI is temporarily unavailable. Try again shortly.";
+  return `The AI couldn't run: ${detail}`;
 }
 
 /** Parse and validate a JSON request body, answering 400 with a readable message on failure. */

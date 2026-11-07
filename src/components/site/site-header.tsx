@@ -8,6 +8,7 @@ import { useAuth } from "@/auth/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { ThemeToggle } from "@/ui/theme";
 import { Logo } from "./logo";
 
 export const NAV_LINKS = [
@@ -60,11 +61,15 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <div className="hidden items-center gap-2 lg:flex">{actions}</div>
+        <div className="hidden items-center gap-2 lg:flex">
+          <ThemeToggle />
+          {actions}
+        </div>
+        <ThemeToggle className="ml-auto lg:hidden" />
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild>
-            <Button variant="outline" size="icon" className="ml-auto size-9 lg:hidden" aria-label="Open menu">
+            <Button variant="outline" size="icon" className="size-9 lg:hidden" aria-label="Open menu">
               <Menu />
             </Button>
           </SheetTrigger>

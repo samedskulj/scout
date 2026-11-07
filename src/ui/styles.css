@@ -49,10 +49,64 @@
   --pitch-a: #15322a;
   --pitch-b: #183830;
   --chalk: rgb(243 244 246 / 0.5);
+  --zebra: rgb(255 255 255 / 0.018);
+  --stars-potential: rgb(243 244 246 / 0.32);
+  --shadow-pop: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-lift: 0 10px 30px -8px rgb(0 0 0 / 0.6);
 
   /* --radius (8px) and the font variables are defined in src/app/globals.css. */
   --radius-app-sm: 6px;
   color-scheme: dark;
+}
+
+/* Light theme: same structure, inverted neutrals. Brand indigo and data colours are darkened to keep 4.5:1 on white. */
+:root.light {
+  --ground: #f4f5f7;
+  --panel: #ffffff;
+  --panel-2: #f0f2f5;
+  --panel-3: #e6e9ee;
+  --line: #e1e4e9;
+  --line-strong: #ccd1d9;
+  --text: #12151a;
+  --text-muted: #4f5764;
+  --faint: #677080;
+  --chrome: #ffffff;
+  --chrome-line: #e1e4e9;
+  --chrome-ink: #343b46;
+  --brand: #4c58d6;
+  --brand-strong: #3d48c2;
+  --brand-soft: rgb(76 88 214 / 0.1);
+  --brand-ink: #ffffff;
+  --primary: #12151a;
+  --primary-hover: #000000;
+  --primary-ink: #ffffff;
+
+  --attr-poor: #5c6880;
+  --attr-fair: #8f620c;
+  --attr-good: #1c7f45;
+  --attr-excellent: #4d6c00;
+  --attr-poor-bg: rgb(92 104 128 / 0.11);
+  --attr-fair-bg: rgb(204 150 40 / 0.16);
+  --attr-good-bg: rgb(28 127 69 / 0.12);
+  --attr-excellent-bg: rgb(140 180 20 / 0.2);
+
+  --good: #1c7f45;
+  --good-soft: rgb(28 127 69 / 0.1);
+  --warn: #9a5f06;
+  --warn-soft: rgb(220 150 40 / 0.14);
+  --bad: #c13c28;
+  --bad-soft: rgb(193 60 40 / 0.09);
+  --info: #0a7594;
+  --info-soft: rgb(10 117 148 / 0.09);
+
+  --pitch-a: #2d7650;
+  --pitch-b: #317e56;
+  --chalk: rgb(255 255 255 / 0.75);
+  --zebra: rgb(18 21 26 / 0.022);
+  --stars-potential: rgb(18 21 26 / 0.22);
+  --shadow-pop: 0 1px 2px rgb(18 21 26 / 0.12);
+  --shadow-lift: 0 10px 30px -10px rgb(18 21 26 / 0.3);
+  color-scheme: light;
 }
 
 html, body { height: 100%; }
@@ -135,7 +189,7 @@ code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
   font: 500 13px/1 var(--font-sans); cursor: pointer;
 }
 .segmented button:hover:not(:disabled) { color: var(--text); }
-.segmented button.active { background: var(--panel-3); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
+.segmented button.active { background: var(--panel-3); color: var(--text); box-shadow: var(--shadow-pop); }
 .segmented button:disabled { opacity: 0.45; cursor: not-allowed; }
 
 /* ---------- Badges ---------- */

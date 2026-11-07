@@ -8,6 +8,6 @@ export interface Health {
 
 export interface ApiErrorBody {
   error: string;
-  /** "claude_unavailable" means the rule-based engine can still do the job. */
+  /** "claude_unavailable" means the Claude API call failed (credit, rate limit, outage); retrying may help. */
   code?: "claude_unavailable";
 }

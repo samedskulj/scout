@@ -1,93 +1,125 @@
+import Anthropic from "@anthropic-ai/sdk";
+import type { Context } from "hono";
 import { HTTPException } from "hono/http-exception";
+import { z } from "zod";
 import {
   AssistantRequestSchema,
-  EvalRequestSchema,
+  EXAMPLE_BRIEFS,
+  ProfileRequestSchema,
+  ScoutRequestSchema,
   type AssistantResponse,
   type DemoResponse,
-  InterpretRequestSchema,
-  ReportRequestSchema,
-  SearchRequestSchema,
-  type AiSource,
-  type Interpretation,
   type Meta,
-  type PlayerDetail,
   type PlayerProfile,
-  type QueryEvalReport,
   type ReportResponse,
+  type ScoutResponse,
 } from "../shared/types.ts";
-import { askClaude, askOffline } from "./ai/assistant.ts";
-import { claudeAi } from "./ai/claude.ts";
-import { offlineAi, parseQuery } from "./ai/offline.ts";
-import { checkClaims, type ScoutAi } from "./ai/types.ts";
-import { createApi, isLive, parseBody, requireUser } from "./lib/index.ts";
-import { getPlayer, PROFILES } from "./players.ts";
-import { runQueryEval } from "./queryEval.ts";
-import { search, similarPlayers } from "./search.ts";
+import { askAssistant } from "./ai/assistant.ts";
+import { checkClaims, fetchProfile, scoutBrief, writeReport, type Job } from "./ai/live.ts";
+import { createApi, explainClaudeError, isLive, LlmError, parseBody, requireUser } from "./lib/index.ts";
 
-/** The requested engine, defaulting to Claude when a key is configured. */
-function engineFor(requested?: AiSource): ScoutAi {
-  const choice = requested ?? (isLive() ? "claude" : "offline");
-  if (choice === "claude" && !isLive()) {
-    throw new HTTPException(400, { message: "Claude needs an ANTHROPIC_API_KEY in .env. The keyword engine works without one." });
-  }
-  return choice === "claude" ? claudeAi : offlineAi;
+/** Every route runs on the AI; without a key they answer 503 with the fix. */
+function requireAi(): void {
+  if (!isLive()) throw new HTTPException(503, { message: "The AI isn't configured: add ANTHROPIC_API_KEY to .env and restart the server." });
 }
 
-function requirePlayer(id: string): PlayerProfile {
-  const player = getPlayer(id);
-  if (!player) throw new HTTPException(404, { message: `No player with id ${id}.` });
-  return player;
+/**
+ * The public landing demo searches the live web too, so anonymous visitors are capped per IP.
+ * The built-in example briefs are cached for the day and cost nothing after the first run.
+ */
+const DEMO_LIMIT = 6;
+const DEMO_WINDOW_MS = 60 * 60 * 1000;
+const demoHits = new Map<string, number[]>();
+
+function limitDemo(c: Context): void {
+  const ip = c.req.header("x-forwarded-for")?.split(",")[0]?.trim() || c.req.header("x-real-ip") || "local";
+  const now = Date.now();
+  const recent = (demoHits.get(ip) ?? []).filter((t) => now - t < DEMO_WINDOW_MS);
+  if (recent.length >= DEMO_LIMIT) throw new HTTPException(429, { message: "That's plenty of demo briefs for now. Sign in to keep scouting." });
+  recent.push(now);
+  demoHits.set(ip, recent);
 }
 
-const star = [...PROFILES].filter((p) => p.position === "ST").sort((a, b) => b.market_value_m - a.market_value_m)[0];
+/**
+ * Long AI jobs answer as newline-delimited JSON: progress lines while the web is searched, then the result
+ * (or an error). Input is validated before the stream starts, so bad requests still get a plain 400.
+ */
+function streamJob<T>(c: Context, work: (job: Job) => Promise<T>): Response {
+  const encoder = new TextEncoder();
+  // If the browser goes away (tab closed, another player opened), stop the AI work too, so nobody pays for it.
+  const abort = new AbortController();
+  c.req.raw.signal.addEventListener("abort", () => abort.abort(), { once: true });
+  let lastLine = "";
+  const body = new ReadableStream<Uint8Array>({
+    cancel() {
+      abort.abort();
+    },
+    async start(controller) {
+      const send = (msg: unknown) => {
+        if (!abort.signal.aborted) controller.enqueue(encoder.encode(`${JSON.stringify(msg)}\n`));
+      };
+      const progress = (line: string) => {
+        if (line === lastLine) return;
+        lastLine = line;
+        send({ type: "progress", line });
+      };
+      try {
+        send({ type: "result", data: await work({ progress, signal: abort.signal }) });
+      } catch (err) {
+        if (abort.signal.aborted) return;
+        const error =
+          err instanceof LlmError || err instanceof HTTPException
+            ? err.message
+            : err instanceof Anthropic.APIError
+              ? explainClaudeError(err)
+              : "Something went wrong on the server.";
+        if (!(err instanceof LlmError)) console.error(err);
+        send({ type: "error", error, code: "claude_unavailable" });
+      } finally {
+        try {
+          controller.close();
+        } catch {
+          // Already closed by a cancelled reader.
+        }
+      }
+    },
+  });
+  return new Response(body, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store" } });
+}
+
+/** Reports work from a profile the client already holds; validated loosely, and checked against itself. */
+const ReportRequestSchema = z.object({
+  profile: z.custom<PlayerProfile>((v) => typeof v === "object" && v !== null && "name" in v && "season_stats" in v && "key_stats" in v),
+  brief: z.string().max(500).nullable().optional(),
+});
 
 export const app = createApi()
   .use("*", requireUser)
-  .get("/meta", (c) =>
-    c.json<Meta>({
-      playerCount: PROFILES.length,
-      examples: [
-        "Left-footed centre-back under 24 who is comfortable on the ball, max £30m",
-        "Pressing striker under 26 from the Eredivisie or Liga Portugal",
-        ...(star ? [`A cheaper replacement for ${star.name}`] : []),
-        "Creative number 10 who can dribble, under £20m",
-      ],
-    }),
-  )
-  .post("/interpret", async (c) => {
-    const { query, engine } = await parseBody(c, InterpretRequestSchema);
-    const ai = engineFor(engine);
-    return c.json<Interpretation>({ spec: await ai.interpret(query), source: ai.source });
+  .get("/meta", (c) => c.json<Meta>({ examples: EXAMPLE_BRIEFS }))
+  .post("/scout", async (c) => {
+    const { query } = await parseBody(c, ScoutRequestSchema);
+    requireAi();
+    return streamJob<ScoutResponse>(c, (job) => scoutBrief(query, 8, job));
   })
-  /** Public landing-page demo: keyword engine only, so anonymous visitors never spend Claude credit. */
   .post("/demo", async (c) => {
-    const { query } = await parseBody(c, InterpretRequestSchema);
-    const spec = parseQuery(query);
-    const { total, matches } = search(spec);
-    return c.json<DemoResponse>({ spec, total, matches: matches.slice(0, 5) });
+    const { query } = await parseBody(c, ScoutRequestSchema);
+    requireAi();
+    if (!EXAMPLE_BRIEFS.includes(query)) limitDemo(c);
+    return streamJob<DemoResponse>(c, (job) => scoutBrief(query, 5, job));
   })
-  .post("/search", async (c) => {
-    const { spec } = await parseBody(c, SearchRequestSchema);
-    return c.json(search(spec));
+  .post("/profile", async (c) => {
+    const { name, club } = await parseBody(c, ProfileRequestSchema);
+    requireAi();
+    return streamJob<PlayerProfile>(c, (job) => fetchProfile(name, club, job));
   })
-  .get("/players/:id", (c) => {
-    const player = requirePlayer(c.req.param("id"));
-    return c.json<PlayerDetail>({ player, similar: similarPlayers(player) });
-  })
-  .post("/players/:id/report", async (c) => {
-    const player = requirePlayer(c.req.param("id"));
-    const { context, engine } = await parseBody(c, ReportRequestSchema);
-    const ai = engineFor(engine);
-    const report = await ai.report(player, context);
-    return c.json<ReportResponse>({ report, checks: checkClaims(report, player), source: ai.source });
+  .post("/report", async (c) => {
+    const { profile, brief } = await parseBody(c, ReportRequestSchema);
+    requireAi();
+    const report = await writeReport(profile, brief ?? undefined);
+    return c.json<ReportResponse>({ report, checks: checkClaims(report, profile) });
   })
   .post("/assistant", async (c) => {
-    const { messages, context, engine } = await parseBody(c, AssistantRequestSchema);
-    const ai = engineFor(engine);
-    return c.json<AssistantResponse>(ai.source === "claude" ? await askClaude(messages, context) : askOffline(messages));
-  })
-  .post("/eval", async (c) => {
-    const { engine } = await parseBody(c, EvalRequestSchema);
-    const { source, passed, total, results } = await runQueryEval(engineFor(engine));
-    return c.json<QueryEvalReport>({ source, passed, total, results: results.map(({ query, checks }) => ({ query, checks })) });
+    const { messages, context } = await parseBody(c, AssistantRequestSchema);
+    requireAi();
+    return streamJob<AssistantResponse>(c, (job) => askAssistant(messages, context, job));
   });

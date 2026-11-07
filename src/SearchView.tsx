@@ -1,83 +1,54 @@
 import { Search } from "lucide-react";
 import { useState, type FormEvent } from "react";
-import type {
-  AiSource,
-  AssistantResponse,
-  Interpretation,
-  Match,
-  Meta,
-  SearchResponse,
-  SearchSpec,
-} from "../shared/types.ts";
+import type { AssistantResponse, Meta, ScoutPlayer, ScoutResponse } from "../shared/types.ts";
 import { Assistant } from "./scout/Assistant.tsx";
+import { SearchLog } from "./scout/bits.tsx";
 import { BriefRead } from "./scout/BriefRead.tsx";
-import { EngineError, PlayerPanel } from "./scout/PlayerPanel.tsx";
+import type { Favourites } from "./scout/favourites.ts";
+import { ApiErrorNote, PlayerPanel } from "./scout/PlayerPanel.tsx";
 import { Shortlist } from "./scout/Shortlist.tsx";
-import { apiPost, asApiError, Button, Segmented, useFetch, type ApiError } from "./ui/index.ts";
+import { apiStream, asApiError, Button, Segmented, useFetch, type ApiError } from "./ui/index.ts";
 
 type BoardView = "brief" | "assistant";
 
-export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiSource; onEngineChange: (e: AiSource) => void }) {
+export function SearchView({ favourites }: { favourites: Favourites }) {
   const meta = useFetch<Meta>("/api/meta").data;
   const [query, setQuery] = useState("");
   const [brief, setBrief] = useState<string | null>(null);
-  const [interpretation, setInterpretation] = useState<Interpretation | null>(null);
-  const [results, setResults] = useState<SearchResponse | null>(null);
-  const [assistantBoard, setAssistantBoard] = useState<{ title: string; matches: Match[] } | null>(null);
+  const [results, setResults] = useState<ScoutResponse | null>(null);
+  const [assistantBoard, setAssistantBoard] = useState<{ title: string; players: ScoutPlayer[] } | null>(null);
   const [view, setView] = useState<BoardView>("brief");
   const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [status, setStatus] = useState<"idle" | "reading" | "searching">("idle");
+  const [busy, setBusy] = useState(false);
+  const [lines, setLines] = useState<string[]>([]);
   const [error, setError] = useState<ApiError>();
 
-  async function runSearch(spec: SearchSpec) {
-    setStatus("searching");
-    try {
-      const res = await apiPost<SearchResponse>("/api/search", { spec });
-      setResults(res);
-      setView("brief");
-      setSelectedId((id) => (res.matches.some((m) => m.player.id === id) ? id : (res.matches[0]?.player.id ?? id)));
-    } catch (err) {
-      setError(asApiError(err));
-    } finally {
-      setStatus("idle");
-    }
-  }
-
-  async function runBrief(text: string, useEngine = engine) {
+  async function runBrief(text: string) {
     const q = text.trim();
-    if (q.length < 3) return;
+    if (q.length < 3 || busy) return;
     setQuery(q);
     setBrief(q);
     setError(undefined);
-    setStatus("reading");
+    setLines([]);
+    setBusy(true);
     try {
-      const interp = await apiPost<Interpretation>("/api/interpret", { query: q, engine: useEngine });
-      setInterpretation(interp);
-      await runSearch(interp.spec);
+      const res = await apiStream<ScoutResponse>("/api/scout", { query: q }, (l) => setLines((x) => [...x, l]));
+      setResults(res);
+      setView("brief");
+      setSelectedId(res.players[0]?.id ?? null);
     } catch (err) {
       setError(asApiError(err));
-      setStatus("idle");
+    } finally {
+      setBusy(false);
     }
   }
 
-  const fallBackToKeywords = () => {
-    setEngine("offline");
-    setError(undefined);
-    if (brief && !interpretation) void runBrief(brief, "offline");
-  };
-
-  const editSpec = (spec: SearchSpec) => {
-    if (!interpretation) return;
-    setInterpretation({ ...interpretation, spec });
-    void runSearch(spec);
-  };
-
   const onAssistant = (res: AssistantResponse) => {
-    if (res.shortlist) {
-      setAssistantBoard(res.shortlist);
+    if (res.board) {
+      setAssistantBoard(res.board);
       setView("assistant");
+      setSelectedId(res.board.players[0]?.id ?? null);
     }
-    if (res.focusId) setSelectedId(res.focusId);
   };
 
   const submit = (e: FormEvent) => {
@@ -85,10 +56,9 @@ export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiS
     void runBrief(query);
   };
 
-  const showing = view === "assistant" && assistantBoard ? assistantBoard.matches : (results?.matches ?? []);
-  const allPlayers = [...(results?.matches ?? []), ...(assistantBoard?.matches ?? [])].map((m) => m.player);
+  const showing = view === "assistant" && assistantBoard ? assistantBoard.players : (results?.players ?? []);
+  const allPlayers = [...(results?.players ?? []), ...(assistantBoard?.players ?? []), ...favourites.players];
   const selected = allPlayers.find((p) => p.id === selectedId) ?? null;
-  const busy = status !== "idle";
 
   return (
     <div className="workspace">
@@ -102,12 +72,12 @@ export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiS
             id="brief"
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Describe the player like you'd say it: left-footed centre-back under 24, comfortable on the ball, max £30m"
+            placeholder="Describe the player like you'd say it: left-footed centre-back under 24, comfortable on the ball, max €35m"
             maxLength={500}
             autoComplete="off"
           />
           <Button type="submit" loading={busy} disabled={query.trim().length < 3}>
-            {status === "reading" ? "Reading brief" : status === "searching" ? "Ranking" : "Scout"}
+            {busy ? "Searching" : "Scout"}
           </Button>
         </div>
         {meta && (
@@ -120,26 +90,23 @@ export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiS
             ))}
           </div>
         )}
-        <EngineError error={error} onFallback={fallBackToKeywords} />
+        <ApiErrorNote error={error} onRetry={brief ? () => void runBrief(brief) : undefined} />
       </form>
 
       <div className="panes">
         <aside className="pane pane-ai">
           <BriefRead
-            interpretation={interpretation}
+            read={results?.read ?? null}
             selectedPosition={selected?.position}
             busy={busy}
             scopesBoard={view === "brief" || !assistantBoard}
             onShowBrief={() => setView("brief")}
-            onChange={editSpec}
           />
           <Assistant
-            selectedId={selectedId}
-            selectedName={selected?.name ?? null}
+            selectedName={selected ? `${selected.name}${selected.club ? ` (${selected.club})` : ""}` : null}
             brief={brief}
-            engine={engine}
+            board={showing.map((p) => `${p.name}${p.club ? ` (${p.club})` : ""}`)}
             onResult={onAssistant}
-            onEngineFallback={() => setEngine("offline")}
           />
         </aside>
 
@@ -149,10 +116,8 @@ export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiS
               {view === "assistant" && assistantBoard
                 ? assistantBoard.title
                 : results
-                  ? results.target
-                    ? `Closest profiles to ${results.target.name} · ${results.total} players fit`
-                    : `${results.total} players fit · top ${results.matches.length} by weighted percentile`
-                  : `${meta?.playerCount ?? 300} players in the database`}
+                  ? `${results.players.length} real player${results.players.length === 1 ? "" : "s"} found · searched ${results.searchedAt}`
+                  : "Real players, found live on the web"}
             </h2>
             {assistantBoard && (
               <Segmented
@@ -167,37 +132,24 @@ export function SearchView({ engine, onEngineChange: setEngine }: { engine?: AiS
             )}
           </header>
           <div className="board-scroll">
+            {busy && <SearchLog lines={lines} title="Searching the web for players" />}
             {showing.length ? (
-              <Shortlist
-                matches={showing}
-                selectedId={selectedId}
-                scoreLabel={view === "brief" && results?.target ? "Alike" : "Fit"}
-                onSelect={setSelectedId}
-              />
-            ) : results && view === "brief" ? (
-              <div className="empty">
-                Nobody fits every filter. Remove a filter on the left, or loosen the brief.
-              </div>
+              <Shortlist players={showing} selectedId={selectedId} onSelect={setSelectedId} favourites={favourites} />
+            ) : results && view === "brief" && !busy ? (
+              <div className="empty">Nobody fit every requirement with a source to back it. Loosen the brief, or ask the assistant for near misses.</div>
             ) : (
-              <BoardIntro />
+              !busy && <BoardIntro />
             )}
           </div>
         </section>
 
         <section className="pane pane-profile" aria-label="Player profile">
-          {selectedId ? (
-            <PlayerPanel
-              key={selectedId}
-              playerId={selectedId}
-              brief={brief}
-              engine={engine}
-              onSelect={setSelectedId}
-              onEngineFallback={() => setEngine("offline")}
-            />
+          {selected ? (
+            <PlayerPanel key={selected.id} player={selected} brief={brief} favourites={favourites} />
           ) : (
             <div className="profile-empty">
               <h2>Player profile</h2>
-              <p className="muted">Pick a player from the shortlist to open his attribute sheet, compare him with similar profiles and get a checked report.</p>
+              <p className="muted">Pick a player to see his photo, this season's stats, a checked report and where every fact came from. Star him for your favourites board.</p>
             </div>
           )}
         </section>
@@ -213,23 +165,23 @@ function BoardIntro() {
       <ol>
         <li>
           <span>
-          <b>Brief it.</b> Claude turns your words into positions, filters and priorities on the left. Change any of them.
+            <b>Brief it.</b> Write what you need the way the head coach said it. The AI reads it and searches the web for real, current players.
           </span>
         </li>
         <li>
           <span>
-          <b>Read the ranking.</b> Players rank by their percentiles in what you asked for. Every row shows the attributes that put him there.
+            <b>Check the facts.</b> Every player comes with this season's numbers and the pages they came from. Anything it couldn't find shows as a
+            dash, never a guess.
           </span>
         </li>
         <li>
           <span>
-          <b>Open a player.</b> A 1–20 attribute sheet, ability stars, a radar against similar or cheaper profiles, and a report checked against
-          the data.
+            <b>Open a player.</b> His photo, full season stats, recent seasons and news, and a scouting report checked against his numbers.
           </span>
         </li>
         <li>
           <span>
-          <b>Ask the assistant.</b> Follow-ups like "someone cheaper" or "compare the top three" run real searches and update this board.
+            <b>Ask the assistant.</b> Follow-ups like "someone cheaper" or "who plays like Saka" run new searches and update this board.
           </span>
         </li>
       </ol>

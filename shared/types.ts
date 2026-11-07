@@ -1,9 +1,15 @@
 import { z } from "zod";
 
+/*
+ * Real players, found live: the AI searches the web (Transfermarkt, FBref, club and league sites) for every
+ * brief and profile, and returns facts with the pages they came from. Photos and badges come from TheSportsDB.
+ * Nothing here is invented test data; a value the AI couldn't find is null, never a guess.
+ */
 
 /* ---------- Football vocabulary ---------- */
 
 export const POSITIONS = {
+  GK: "Goalkeeper",
   CB: "Centre-back",
   FB: "Full-back",
   DM: "Defensive midfielder",
@@ -15,168 +21,140 @@ export const POSITIONS = {
 export type Position = keyof typeof POSITIONS;
 export const PositionSchema = z.enum(Object.keys(POSITIONS) as [Position, ...Position[]]);
 
-export const LEAGUES = [
-  "England 1", "England 2", "Spain 1", "Germany 1", "Italy 1", "France 1", "Netherlands 1", "Portugal 1",
-] as const;
-export const LeagueSchema = z.enum(LEAGUES);
-export type League = z.infer<typeof LeagueSchema>;
+export type Foot = "left" | "right" | "both" | "unknown";
 
-/** All metrics are per 90 minutes unless they're percentages. */
-export const METRICS = {
-  goals: { label: "Non-penalty goals", short: "Goals", unit: "/90" },
-  xg: { label: "Non-penalty xG", short: "xG", unit: "/90" },
-  shots: { label: "Shots", short: "Shots", unit: "/90" },
-  xa: { label: "Expected assists", short: "xA", unit: "/90" },
-  key_passes: { label: "Key passes", short: "Key passes", unit: "/90" },
-  prog_passes: { label: "Progressive passes", short: "Prog. passes", unit: "/90" },
-  prog_carries: { label: "Progressive carries", short: "Prog. carries", unit: "/90" },
-  dribbles: { label: "Successful dribbles", short: "Dribbles", unit: "/90" },
-  pass_pct: { label: "Pass completion", short: "Pass %", unit: "%" },
-  tackles_int: { label: "Tackles + interceptions", short: "Tkl+Int", unit: "/90" },
-  aerial_pct: { label: "Aerial duels won", short: "Aerial %", unit: "%" },
-  recoveries: { label: "Ball recoveries", short: "Recoveries", unit: "/90" },
-} as const;
-export type MetricId = keyof typeof METRICS;
-export const METRIC_IDS = Object.keys(METRICS) as [MetricId, ...MetricId[]];
-export const MetricIdSchema = z.enum(METRIC_IDS);
+/* ---------- A real player, as the AI found him ---------- */
 
-/** What "good" means for each position when the scout doesn't say. */
-export const KEY_METRICS: Record<Position, MetricId[]> = {
-  CB: ["tackles_int", "aerial_pct", "prog_passes", "pass_pct", "recoveries"],
-  FB: ["tackles_int", "prog_carries", "xa", "key_passes", "recoveries"],
-  DM: ["tackles_int", "recoveries", "prog_passes", "pass_pct", "aerial_pct"],
-  CM: ["prog_passes", "key_passes", "recoveries", "pass_pct", "prog_carries"],
-  AM: ["xa", "key_passes", "dribbles", "xg", "prog_carries"],
-  W: ["dribbles", "prog_carries", "xa", "xg", "key_passes"],
-  ST: ["goals", "xg", "shots", "aerial_pct", "xa"],
-};
+export const SourceSchema = z.object({
+  title: z.string().describe("Site or page name, e.g. 'Transfermarkt' or 'FBref'"),
+  url: z.string().describe("The page the facts came from"),
+});
+export type Source = z.infer<typeof SourceSchema>;
 
-export type Foot = "left" | "right" | "both";
+export const StatSchema = z.object({
+  label: z.string().describe("Short stat name, e.g. 'Goals', 'xG per 90', 'Tackles won per 90', 'Pass completion %'"),
+  value: z.string().describe("The value exactly as found, e.g. '12', '0.41', '87%'"),
+});
+export type Stat = z.infer<typeof StatSchema>;
 
-export interface Player {
+const nullable = <T extends z.ZodType>(s: T, what: string) => s.nullable().describe(`${what}; null if no source states it`);
+
+export const PlayerFactsSchema = z.object({
+  name: z.string().describe("Full name as commonly written"),
+  age: nullable(z.number().int(), "Current age"),
+  birth_date: nullable(z.string(), "Date of birth, YYYY-MM-DD"),
+  nationality: nullable(z.string(), "Main nationality"),
+  position: PositionSchema.describe("Closest of GK, CB, FB, DM, CM, AM, W, ST"),
+  role: z.string().describe("Detailed position as sources describe it, e.g. 'Left winger' or 'Right-back'"),
+  foot: z.enum(["left", "right", "both", "unknown"]),
+  height_cm: nullable(z.number().int(), "Height in cm"),
+  club: nullable(z.string(), "Current club (or loan club, noted in role)"),
+  league: nullable(z.string(), "Current league, e.g. 'Premier League'"),
+  market_value_eur_m: nullable(z.number(), "Latest Transfermarkt market value in € millions"),
+  contract_until: nullable(z.string(), "Contract expiry, e.g. 'Jun 2028'"),
+  season: z.string().describe("The season the stats are from, e.g. '2025/26'"),
+  appearances: nullable(z.number().int(), "League appearances this season"),
+  minutes: nullable(z.number().int(), "League minutes this season"),
+  goals: nullable(z.number().int(), "League goals this season"),
+  assists: nullable(z.number().int(), "League assists this season"),
+  key_stats: z.array(StatSchema).max(8).describe("3-8 stats that matter for his position and the brief, copied from sources"),
+});
+export type PlayerFacts = z.infer<typeof PlayerFactsSchema>;
+
+/** Pictures from TheSportsDB, attached on the server after the AI has found the player. */
+export interface PlayerMedia {
+  photo: string | null;
+  cutout: string | null;
+  clubBadge: string | null;
+}
+
+export interface ScoutPlayer extends PlayerFacts, PlayerMedia {
+  /** Stable id from name and birth date, so favourites and profiles line up across searches. */
   id: string;
-  name: string;
-  age: number;
-  nationality: string;
-  position: Position;
-  foot: Foot;
-  height_cm: number;
-  club: string;
-  league: League;
-  minutes: number;
-  market_value_m: number;
-  contract_until: number;
-  metrics: Record<MetricId, number>;
+  /** 0-100: how well he fits the brief, in the AI's judgement. */
+  fit: number;
+  fit_reason: string;
+  sources: Source[];
 }
 
-/** Percentile (0-100) of each metric against players in the same position. */
-export type Percentiles = Record<MetricId, number>;
+/* ---------- Searching ---------- */
 
-export interface PlayerProfile extends Player {
-  percentiles: Percentiles;
-}
-
-/* ---------- Natural-language search ---------- */
-
-export const SearchSpecSchema = z.object({
-  positions: z.array(PositionSchema).describe("Positions wanted; empty means any"),
-  min_age: z.number().int().nullable(),
-  max_age: z.number().int().nullable(),
-  foot: z.enum(["left", "right", "any"]).describe("Preferred foot; two-footed players match either"),
-  max_value_m: z.number().nullable().describe("Maximum market value in £ millions"),
-  min_height_cm: z.number().nullable(),
-  leagues: z.array(LeagueSchema).describe("Leagues to search; empty means all"),
-  nationalities: z.array(z.string()).describe("Nationalities wanted, e.g. Brazil; empty means any"),
-  priorities: z
-    .array(z.object({ metric: MetricIdSchema, weight: z.number().describe("1 = nice to have, 3 = essential") }))
-    .describe("Metrics that define what the scout is looking for"),
-  similar_to: z.string().nullable().describe("Name of a player whose profile the scout wants to replicate or replace"),
-  max_value_ratio: z
-    .number()
-    .nullable()
-    .describe("Budget relative to the similar_to player's value: 'cheaper' = 0.6, 'half the price' = 0.5; null otherwise"),
-  explanation: z.string().describe("One sentence on how the request was interpreted, including assumptions"),
-});
-export type SearchSpec = z.infer<typeof SearchSpecSchema>;
-
-export const EngineSchema = z.enum(["claude", "offline"]);
-
-export const InterpretRequestSchema = z.object({
+export const ScoutRequestSchema = z.object({
   query: z.string().trim().min(3, "Describe the player in a few words").max(500),
-  engine: EngineSchema.optional(),
 });
-export const SearchRequestSchema = z.object({ spec: SearchSpecSchema });
 
-export type AiSource = z.infer<typeof EngineSchema>;
+/** How the AI read the brief, shown to the scout beside the results. */
+export const BriefReadSchema = z.object({
+  summary: z.string().describe("One or two plain sentences on how the brief was read, including assumptions"),
+  positions: z.array(PositionSchema).describe("Positions searched; empty means any"),
+  filters: z.array(z.string()).describe("Short chips for each requirement, e.g. 'Left foot', 'Under 24', 'Max €35m', 'Premier League'"),
+});
+export type BriefRead = z.infer<typeof BriefReadSchema>;
 
-export interface Interpretation {
-  spec: SearchSpec;
-  source: AiSource;
+export interface ScoutResponse {
+  read: BriefRead;
+  players: ScoutPlayer[];
+  /** ISO date the web was searched; results are cached per day. */
+  searchedAt: string;
 }
 
-export interface Reason {
-  metric: MetricId;
-  percentile: number;
-}
+/* ---------- Full profile ---------- */
 
-export interface Match {
-  player: PlayerProfile;
-  /** 0-100: weighted percentile, or profile similarity when searching for a similar player. */
-  score: number;
-  reasons: Reason[];
-}
+export const ProfileRequestSchema = z.object({
+  name: z.string().trim().min(2).max(120),
+  club: z.string().trim().max(120).nullable().optional(),
+});
 
-export interface SearchResponse {
-  target: PlayerProfile | null;
-  total: number;
-  matches: Match[];
-}
+export const CareerRowSchema = z.object({
+  season: z.string(),
+  club: z.string(),
+  appearances: z.number().int().nullable(),
+  goals: z.number().int().nullable(),
+});
+
+export const ProfileExtraSchema = z.object({
+  season_stats: z.array(StatSchema).max(20).describe("All useful stats for this season found in sources, per 90 where given"),
+  career: z.array(CareerRowSchema).max(8).describe("Recent seasons, newest first"),
+  profile: z.string().describe("Three or four sentences: playing style, form and situation, from sources"),
+  recent_news: z.array(z.string()).max(4).describe("Up to four short, dated items: transfers, injuries, call-ups"),
+});
+export type ProfileExtra = z.infer<typeof ProfileExtraSchema>;
+
+export interface PlayerProfile extends ScoutPlayer, ProfileExtra {}
 
 /* ---------- Scouting report ---------- */
 
 export const ScoutReportSchema = z.object({
   headline: z.string().describe("One line a sporting director would remember"),
   summary: z.string().describe("Three or four sentences: profile, level, fit"),
-  strengths: z.array(z.object({ metric: MetricIdSchema, point: z.string() })).describe("2-4, each tied to a metric"),
-  weaknesses: z.array(z.object({ metric: MetricIdSchema, point: z.string() })).describe("1-3, each tied to a metric"),
-  best_role: z.string().describe("Tactical role that suits the data, e.g. ball-playing centre-back in a back four"),
-  risks: z.array(z.string()).describe("Age, sample size, league level, contract, value"),
+  strengths: z
+    .array(z.object({ stat: z.string().describe("The exact label of the stat this rests on, from the profile"), point: z.string() }))
+    .describe("2-4, each tied to a stat in the profile"),
+  weaknesses: z
+    .array(z.object({ stat: z.string().describe("The exact label of the stat this rests on, from the profile"), point: z.string() }))
+    .describe("1-3, each tied to a stat in the profile"),
+  best_role: z.string(),
+  risks: z.array(z.string()).describe("Age, minutes, league level, contract, value, injuries"),
   recommendation: z.enum(["sign", "monitor", "pass"]),
   confidence: z.enum(["low", "medium", "high"]),
 });
 export type ScoutReport = z.infer<typeof ScoutReportSchema>;
 
-export const ReportRequestSchema = z.object({ context: z.string().max(500).optional(), engine: EngineSchema.optional() });
-
-export const EvalRequestSchema = z.object({ engine: EngineSchema });
-
-export interface QueryEvalReport {
-  source: AiSource;
-  passed: number;
-  total: number;
-  results: { query: string; checks: { field: string; pass: boolean }[] }[];
-}
-
-/** A claim the data doesn't back up, e.g. a "strength" in the 30th percentile. */
+/** A report claim checked against the profile: does the stat it names actually exist there? */
 export interface ClaimCheck {
   kind: "strength" | "weakness";
-  metric: MetricId;
-  percentile: number;
+  stat: string;
+  /** The value found in the profile, or null when the claim names a stat the profile doesn't have. */
+  value: string | null;
   supported: boolean;
 }
 
 export interface ReportResponse {
   report: ScoutReport;
   checks: ClaimCheck[];
-  source: AiSource;
 }
 
-export interface PlayerDetail {
-  player: PlayerProfile;
-  similar: Match[];
-}
-
-/* ---------- Scout assistant (chat with tool use) ---------- */
+/* ---------- Assistant ---------- */
 
 export const ChatTurnSchema = z.object({
   role: z.enum(["user", "assistant"]),
@@ -187,34 +165,76 @@ export type ChatTurn = z.infer<typeof ChatTurnSchema>;
 export const AssistantRequestSchema = z.object({
   messages: z.array(ChatTurnSchema).min(1).max(40),
   /** What the scout is looking at, so "him" and "this brief" make sense. */
-  context: z.object({ selectedId: z.string().nullable(), brief: z.string().max(500).nullable() }).optional(),
-  engine: EngineSchema.optional(),
+  context: z
+    .object({
+      selected: z.string().max(200).nullable(),
+      brief: z.string().max(500).nullable(),
+      board: z.array(z.string().max(200)).max(20),
+    })
+    .optional(),
 });
 
-/** One database call the assistant made, shown in the chat so its working is visible. */
+export const ASSISTANT_TOOLS = ["web_search", "show_players", "lookup_real_player", "lookup_club"] as const;
+export type AssistantTool = (typeof ASSISTANT_TOOLS)[number];
+
 export interface AssistantStep {
-  tool: "search_players" | "get_player" | "compare_players" | "show_shortlist";
+  tool: AssistantTool;
   summary: string;
 }
 
+/* ---------- Real-world cards (TheSportsDB) ---------- */
+
+export interface RealPlayer {
+  kind: "player";
+  id: string;
+  name: string;
+  club: string | null;
+  nationality: string | null;
+  position: string | null;
+  born: string | null;
+  height: string | null;
+  number: string | null;
+  photo: string | null;
+  cutout: string | null;
+  clubBadge: string | null;
+  source: string;
+}
+
+export interface RealClub {
+  kind: "club";
+  id: string;
+  name: string;
+  league: string | null;
+  country: string | null;
+  stadium: string | null;
+  founded: number | null;
+  badge: string | null;
+  colours: string[];
+  source: string;
+}
+
+export type RealCard = RealPlayer | RealClub;
+
 export interface AssistantResponse {
   reply: string;
-  /** Players the assistant put on the board, in its order, or null if it didn't change the board. */
-  shortlist: { title: string; matches: Match[] } | null;
-  /** Player to open in the profile panel. */
-  focusId: string | null;
+  /** Players the assistant put on the board, or null if it didn't change the board. */
+  board: { title: string; players: ScoutPlayer[] } | null;
   steps: AssistantStep[];
-  source: AiSource;
+  cards: RealCard[];
+  sources: Source[];
 }
 
-/** The landing page's live demo: keyword-engine read of the brief plus the top five. */
-export interface DemoResponse {
-  spec: SearchSpec;
-  total: number;
-  matches: Match[];
-}
+/** The landing page's live demo. */
+export type DemoResponse = ScoutResponse;
 
 export interface Meta {
-  playerCount: number;
   examples: string[];
 }
+
+/** Example briefs shown in the app and on the landing page; their results are cached for the day. */
+export const EXAMPLE_BRIEFS = [
+  "Left-footed centre-back under 24, comfortable on the ball, max €35m",
+  "Pressing striker under 26 from the Eredivisie or Liga Portugal",
+  "Creative number 10 under 23 who can dribble, under €25m",
+  "Experienced goalkeeper on an expiring contract",
+];

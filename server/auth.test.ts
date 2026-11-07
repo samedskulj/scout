@@ -15,7 +15,7 @@ describe("API sign-in guard", () => {
     app.request(path, { method: "POST", headers: { "Content-Type": "application/json", ...headers }, body: JSON.stringify(body) });
 
   it("rejects protected routes without a session", async () => {
-    const res = await post("/api/search", { spec: {} });
+    const res = await post("/api/scout", { query: "left-footed centre-back" });
     expect(res.status).toBe(401);
     expect(((await res.json()) as { error: string }).error).toMatch(/sign in/i);
   });
@@ -23,11 +23,11 @@ describe("API sign-in guard", () => {
   it("keeps health, meta and the landing demo public", async () => {
     expect((await app.request("/api/health")).status).toBe(200);
     expect((await app.request("/api/meta")).status).toBe(200);
+    // The demo needs Claude; whatever it answers, it must not be the sign-in wall.
+    const prevKey = process.env.ANTHROPIC_API_KEY;
+    delete process.env.ANTHROPIC_API_KEY;
     const demo = await post("/api/demo", { query: "left-footed centre-back under 24" });
-    expect(demo.status).toBe(200);
-    const body = (await demo.json()) as { matches: { player: { position: string } }[] };
-    expect(body.matches.length).toBeGreaterThan(0);
-    expect(body.matches.length).toBeLessThanOrEqual(5);
-    expect(body.matches.every((m) => m.player.position === "CB")).toBe(true);
+    if (prevKey !== undefined) process.env.ANTHROPIC_API_KEY = prevKey;
+    expect(demo.status).not.toBe(401);
   });
 });

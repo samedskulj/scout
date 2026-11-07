@@ -4,8 +4,26 @@
     {
       "name": "scout-copilot",
       "runtimeExecutable": "npm.cmd",
-      "runtimeArgs": ["run", "dev"],
+      "runtimeArgs": [
+        "run",
+        "dev"
+      ],
       "port": 5174
+    },
+    {
+      "name": "scout-copilot-noauth",
+      "runtimeExecutable": "npx.cmd",
+      "runtimeArgs": [
+        "next",
+        "dev",
+        "-p",
+        "5177"
+      ],
+      "port": 5177,
+      "env": {
+        "NEXT_PUBLIC_SUPABASE_URL": "",
+        "NEXT_PUBLIC_SUPABASE_ANON_KEY": ""
+      }
     }
   ]
 }

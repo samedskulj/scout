@@ -1,18 +1,16 @@
 "use client";
 
-import { AlertTriangle, ArrowRight, ArrowUpRight, Check, FileCheck2, LayoutList, ListOrdered, Search, Sparkles, UserRound } from "lucide-react";
+import { AlertTriangle, ArrowRight, ArrowUpRight, Check, FileCheck2, Globe, LayoutList, Link2, Search, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useState, type ReactNode } from "react";
 import { Glow, Section, SectionHeading } from "@/components/site/section";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { ability, ATTRIBUTE_GROUPS } from "../../shared/attributes.ts";
-import { ordinal } from "../../shared/format.ts";
-import { METRIC_IDS, METRICS, POSITIONS, type DemoResponse, type MetricId, type PlayerProfile } from "../../shared/types.ts";
+import { dash, eur } from "../../shared/format.ts";
+import type { DemoResponse, ScoutPlayer } from "../../shared/types.ts";
+import { Avatar, ClubBadge, SourceList } from "../scout/bits.tsx";
 import { Pitch } from "../scout/Pitch.tsx";
-import { Radar } from "../scout/Radar.tsx";
-import { Attr, Stars } from "../scout/Ratings.tsx";
 import { LiveDemo } from "./LiveDemo.tsx";
 import { FaqList, PlaceholderNote, PlanCard } from "./blocks.tsx";
 import { PLANS, PRICES_ARE_PLACEHOLDERS } from "./plans.ts";
@@ -20,59 +18,50 @@ import { PLANS, PRICES_ARE_PLACEHOLDERS } from "./plans.ts";
 const FAQ = [
   {
     q: "Where does the player data come from?",
-    a: "This version ships with a demo database of 300 fictional outfield players across eight leagues, so you can try every feature safely. Real data from your provider replaces that one file; on Enterprise we help you connect it.",
+    a: "From the live web. For every brief, the AI searches sites like Transfermarkt, FBref and official league pages for real, current players, and lists the pages each fact came from. Photos and club badges come from TheSportsDB.",
   },
   {
-    q: "Is the AI making up the ratings?",
-    a: "No. Claude reads your brief and writes reports; code does the ranking. Every 1–20 attribute is the player's percentile against others in his position, divided by five. Ability stars average the position's key metrics. Potential adds headroom for age and is always labelled an estimate.",
+    q: "Can the AI make numbers up?",
+    a: "It's told to report only what a source states, and anything it can't find shows as a dash, never a guess. Players whose cited pages didn't appear in its searches are dropped. Every player links to his sources so you can check.",
   },
   {
     q: "What stops a report from overstating a player?",
-    a: "Every strength must sit at or above the 60th percentile and every weakness at or below the 40th. A claim that fails is flagged on the report in red, never hidden.",
+    a: "Every strength and weakness must point to a specific stat in his live profile. A claim that names a stat he doesn't have is flagged on the report in red, never hidden.",
   },
   {
     q: "What happens to our briefs?",
-    a: "Briefs, report requests and assistant messages are sent to Anthropic's Claude API to be read and answered. Your account is managed with Supabase.",
+    a: "Briefs, report requests and assistant messages are sent to our AI provider's API to be read and answered. Your account is managed with Supabase.",
   },
   {
-    q: "Does it cover goalkeepers?",
-    a: "Not yet. Rankings cover outfield players with at least 900 minutes, and stats are not yet adjusted for league strength.",
+    q: "Which players does it cover?",
+    a: "Any professional player the web has good information on: every position including goalkeepers, in any league. Coverage is best for Europe's top divisions, where sources publish the most stats.",
   },
 ];
 
 const STATS = [
-  { value: "300", label: "fictional players to try it on" },
-  { value: "8", label: "leagues, 25 clubs" },
-  { value: "12", label: "per-90 metrics per player" },
-  { value: "60 / 40", label: "percentile bar every report claim must clear" },
+  { value: "Live", label: "every brief searched on today's web" },
+  { value: "Any", label: "league, position or nationality" },
+  { value: "100%", label: "of players listed with their sources" },
+  { value: "0", label: "made-up numbers: unknowns show as a dash" },
 ];
 
 const STEPS = [
-  { title: "Brief it", body: "Type it the way the head coach said it. Claude turns it into positions, filters and priorities you can edit." },
-  { title: "Check the ranking", body: "Players rank by their percentiles in what you asked for, with the stats that put each one there." },
-  { title: "Compare", body: "Open a 1–20 sheet, then put him on a radar against similar or cheaper players." },
-  { title: "Report", body: "Get a sign, monitor or pass report for the sporting director, every claim checked." },
+  { title: "Brief it", body: "Type it the way the head coach said it. The AI reads it and searches the web for real, current players who fit." },
+  { title: "Check the facts", body: "Each player comes with this season's numbers, his photo, and the pages every fact came from." },
+  { title: "Go deeper", body: "Open a player for full season stats, recent seasons and news, researched live." },
+  { title: "Report", body: "Get a sign, monitor or pass report for the sporting director, every claim checked against his stats." },
 ];
 
 const TRUST = [
-  { icon: ListOrdered, title: "Rankings you can audit", body: "Players rank by weighted percentiles against their own position. Every row shows the stats that put him there." },
-  { icon: FileCheck2, title: "Reports checked by code", body: "Strengths must be 60th percentile or better, weaknesses 40th or worse. Anything else is flagged on the report." },
-  { icon: Sparkles, title: "AI that shows its working", body: "The brief Claude read is shown as filters you can edit. The assistant lists every search it ran." },
-  { icon: UserRound, title: "Ratings with a source", body: "Each 1–20 attribute sits beside its per-90 number and percentile. Potential is always labelled an estimate." },
+  { icon: Link2, title: "Every fact has a source", body: "Each player links to the pages his club, value and stats came from. Sources the search never returned are thrown out." },
+  { icon: FileCheck2, title: "Reports checked by code", body: "Every strength and weakness must name a stat in his profile. Anything else is flagged on the report." },
+  { icon: Sparkles, title: "AI that shows its working", body: "You see how the brief was read and every web search as it runs." },
+  { icon: Globe, title: "Current, not cached forever", body: "Searches run against today's web and refresh daily, so transfers and form are up to date." },
 ];
-
-const RADAR_METRICS = ATTRIBUTE_GROUPS.flatMap((g) => g.metrics);
-
-/** A report excerpt from the player's real percentiles, with one deliberately unsupported claim to show the check. */
-function reportExample(p: PlayerProfile) {
-  const ranked = [...METRIC_IDS].sort((x, y) => p.percentiles[y] - p.percentiles[x]);
-  return [...ranked.slice(0, 2).map((m) => ({ metric: m, ok: true })), { metric: ranked.at(-1)!, ok: false }] as { metric: MetricId; ok: boolean }[];
-}
 
 export function LandingPage() {
   const [demo, setDemo] = useState<DemoResponse | null>(null);
-  const top = demo?.matches[0]?.player;
-  const second = demo?.matches[1]?.player;
+  const top = demo?.players[0];
 
   return (
     <>
@@ -83,7 +72,7 @@ export function LandingPage() {
           <Badge asChild variant="outline" className="h-7 rounded-full border-input bg-secondary/60 px-3 text-[13px] text-muted-foreground">
             <a href="#how">
               <span className="size-1.5 rounded-full bg-brand" aria-hidden />
-              AI reads the brief. Code ranks the players.
+              AI searches the live web. Every fact has a source.
               <ArrowUpRight />
             </a>
           </Badge>
@@ -91,7 +80,7 @@ export function LandingPage() {
             From the coach&apos;s brief <span className="text-muted-foreground">to a shortlist you can defend.</span>
           </h1>
           <p className="mt-6 max-w-2xl text-lg leading-relaxed text-pretty text-muted-foreground md:text-xl">
-            Scout Copilot reads a recruitment brief the way your head coach says it, ranks every player on the numbers, and writes a scouting report
+            Scout Copilot reads a recruitment brief the way your head coach says it, finds real players who fit on today's web, and writes a scouting report
             that checks its own claims.
           </p>
           <div className="mt-8 flex w-full flex-col justify-center gap-3 sm:w-auto sm:flex-row">
@@ -105,7 +94,7 @@ export function LandingPage() {
             </Button>
           </div>
           <ul className="mt-7 flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground" aria-label="What makes it different">
-            {["Explainable rankings", "Every report claim checked", "Powered by Claude"].map((t) => (
+            {["Real, current players", "Every fact sourced", "Every report claim checked"].map((t) => (
               <li key={t} className="inline-flex items-center gap-1.5">
                 <Check className="size-4 text-brand-strong" aria-hidden /> {t}
               </li>
@@ -114,23 +103,23 @@ export function LandingPage() {
         </div>
 
         <div className="container mt-14 md:mt-16">
-          <div className="overflow-hidden rounded-2xl border border-input bg-card shadow-[0_0_0_1px_rgb(0_0_0/0.4),0_40px_80px_-20px_rgb(0_0_0/0.7),0_0_120px_-40px_rgb(124_134_255/0.35)]">
+          <div className="overflow-hidden rounded-2xl border border-input bg-card shadow-[0_0_0_1px_rgb(0_0_0/0.4),0_40px_80px_-20px_rgb(0_0_0/0.7),0_0_120px_-40px_rgb(124_134_255/0.35)] [.light_&]:shadow-[0_0_0_1px_rgb(18_21_26/0.06),0_40px_80px_-30px_rgb(18_21_26/0.25),0_0_120px_-40px_rgb(76_88_214/0.3)]">
             <div className="relative flex h-10 items-center gap-1.5 border-b bg-background px-4" aria-hidden>
-              <span className="size-2.5 rounded-full bg-[#2c3138]" />
-              <span className="size-2.5 rounded-full bg-[#2c3138]" />
-              <span className="size-2.5 rounded-full bg-[#2c3138]" />
+              <span className="size-2.5 rounded-full bg-line-strong" />
+              <span className="size-2.5 rounded-full bg-line-strong" />
+              <span className="size-2.5 rounded-full bg-line-strong" />
               <p className="absolute left-1/2 hidden -translate-x-1/2 text-[12.5px] text-faint sm:block">Scout Copilot · Live demo</p>
             </div>
             <LiveDemo onResult={setDemo} />
           </div>
           <p className="mt-3.5 text-center text-[13px] text-faint">
-            Try your own brief above. The demo uses the free keyword engine and fictional players; signed-in scouts get Claude.
+            Try your own brief above. The AI searches today's web for real players; signed-in scouts get the full workspace.
           </p>
         </div>
       </section>
 
       {/* Stats strip */}
-      <section className="pt-20 md:pt-28" aria-label="The demo database at a glance">
+      <section className="pt-20 md:pt-28" aria-label="At a glance">
         <div className="container">
           <dl className="grid grid-cols-2 gap-px overflow-hidden rounded-2xl border bg-border lg:grid-cols-4">
             {STATS.map((s) => (
@@ -148,38 +137,24 @@ export function LandingPage() {
         <SectionHeading
           eyebrow="Product"
           title="Everything a recruitment meeting needs, on one screen."
-          lead="Ratings scouts already think in, comparisons that show the trade-offs, and reports a sporting director can trust."
+          lead="Real players with photos and current numbers, sources you can click, and reports a sporting director can trust."
         />
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <Tile
-            wide
-            title="Read every player like an attribute sheet"
-            body="Twelve per-90 stats as 1–20 attributes against his position, with the real number and percentile beside each."
-          >
-            {top && <SheetShowcase player={top} />}
+          <Tile wide title="A real player card, researched live" body="Club, age, value, contract and this season's numbers, with his photo and the pages it all came from.">
+            {top && <CardShowcase player={top} />}
           </Tile>
-          <Tile title="Reports that check their own claims" body="Anything the data doesn't back is flagged, not hidden.">
+          <Tile title="Reports that check their own claims" body="Anything his stats don't back is flagged, not hidden.">
             {top && <ReportShowcase player={top} />}
           </Tile>
-          <Tile title="Compare on one radar" body="Put him against the most similar profiles, or only the cheaper ones.">
-            {top && second && (
-              <div className="mt-auto grid place-items-center [&_.radar_svg]:max-w-[300px]">
-                <Radar
-                  axes={RADAR_METRICS.map((m) => METRICS[m].short)}
-                  series={[
-                    { name: top.name, values: RADAR_METRICS.map((m) => top.percentiles[m]) },
-                    { name: second.name, values: RADAR_METRICS.map((m) => second.percentiles[m]) },
-                  ]}
-                />
-              </div>
-            )}
+          <Tile title="Every fact, one click from its source" body="Transfermarkt, FBref, league and club pages. Check anything before the meeting.">
+            {top && <SourceList sources={top.sources.slice(0, 4)} />}
           </Tile>
-          <Tile title="The brief, drawn on a pitch" body="See which positions Claude read, and click one to change the search.">
+          <Tile title="The brief, drawn on a pitch" body="See which positions the AI read before you look at a single name.">
             <div className="mx-auto mt-auto w-full max-w-[230px]">
-              <Pitch searched={demo?.spec.positions ?? []} selected={top?.position} />
+              <Pitch searched={demo?.read.positions ?? []} selected={top?.position} />
             </div>
           </Tile>
-          <Tile title="An assistant that runs the searches" body="Ask follow-ups like a colleague. Its picks land on your board.">
+          <Tile title="An assistant that searches for you" body="Ask follow-ups like a colleague. It searches the web and puts its picks on your board.">
             <AssistantShowcase player={top} />
           </Tile>
         </div>
@@ -315,92 +290,84 @@ function Tile({ title, body, wide, children }: { title: string; body: string; wi
   );
 }
 
-function SheetShowcase({ player }: { player: PlayerProfile }) {
-  const a = ability(player);
+function CardShowcase({ player }: { player: ScoutPlayer }) {
   return (
-    <figure className="rounded-xl border bg-background p-5" aria-label={`Attribute sheet for ${player.name}`}>
-      <header className="mb-3.5 flex flex-col justify-between gap-4 border-b pb-3.5 sm:flex-row sm:items-start">
-        <div>
+    <figure className="rounded-xl border bg-background p-5" aria-label={`Player card for ${player.name}`}>
+      <header className="mb-3.5 flex items-center gap-4 border-b pb-3.5">
+        <Avatar player={player} size={64} prefer="cutout" />
+        <div className="min-w-0">
           <p className="text-xl leading-tight font-bold tracking-tight">{player.name}</p>
-          <p className="mt-1 text-[13px] text-muted-foreground">
-            {POSITIONS[player.position]} · {player.club} · {player.age}
+          <p className="mt-1 flex items-center gap-1.5 text-[13px] text-muted-foreground">
+            <ClubBadge src={player.clubBadge} size={14} /> {[player.club, player.league].filter(Boolean).join(" · ")}
+          </p>
+          <p className="mt-0.5 text-[13px] text-muted-foreground">
+            {player.role} · {dash(player.age)} · {eur(player.market_value_eur_m)} · contract {dash(player.contract_until)}
           </p>
         </div>
-        <div className="grid gap-1.5 sm:justify-items-end">
-          <Stars current={a.current} potential={a.potential} size="lg" />
-          <small className="text-[11px] font-semibold tracking-wider text-faint uppercase">Ability · potential (est.)</small>
-        </div>
       </header>
-      <div className="grid gap-x-7 gap-y-4 sm:grid-cols-2">
-        {ATTRIBUTE_GROUPS.map((g) => (
-          <section key={g.label}>
-            <h4 className="mb-1.5 text-[11px] font-semibold tracking-wider text-faint uppercase">{g.label}</h4>
-            <ul>
-              {g.metrics.map((m) => (
-                <li key={m} className="grid grid-cols-[minmax(0,1fr)_auto_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
-                  <span>{METRICS[m].short}</span>
-                  <small className="text-xs whitespace-nowrap text-muted-foreground">
-                    {player.metrics[m]}
-                    {METRICS[m].unit} · {ordinal(player.percentiles[m])}
-                  </small>
-                  <Attr percentile={player.percentiles[m]} metric={m} player={player} />
-                </li>
-              ))}
-            </ul>
-          </section>
+      <ul className="grid gap-x-7 sm:grid-cols-2">
+        <li className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
+          <span>{player.season} league</span>
+          <b className="font-cond text-[15px]">
+            {dash(player.appearances)} apps · {dash(player.goals)} G · {dash(player.assists)} A
+          </b>
+        </li>
+        {player.key_stats.slice(0, 5).map((s) => (
+          <li key={s.label} className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-2.5 border-b py-1.5 text-[13.5px]">
+            <span>{s.label}</span>
+            <b className="font-cond text-[15px]">{s.value}</b>
+          </li>
         ))}
-      </div>
+      </ul>
     </figure>
   );
 }
 
-function ReportShowcase({ player }: { player: PlayerProfile }) {
+function ReportShowcase({ player }: { player: ScoutPlayer }) {
+  const claims = [
+    ...player.key_stats.slice(0, 2).map((s) => ({ label: s.label, value: s.value, ok: true })),
+    { label: "Aerial duels won %", value: null, ok: false },
+  ].filter((c, i, all) => all.findIndex((x) => x.label === c.label) === i);
   return (
     <figure aria-label="Example report check">
       <ul className="grid gap-2">
-        {reportExample(player).map((c) => (
+        {claims.map((c) => (
           <li
-            key={c.metric}
+            key={c.label}
             className={cn(
-              "grid grid-cols-[auto_minmax(0,1fr)] items-center gap-x-3 gap-y-1 rounded-xl border bg-background px-3 py-2.5 sm:grid-cols-[auto_minmax(0,1fr)_auto]",
+              "grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 gap-y-1 rounded-xl border bg-background px-3 py-2.5",
               !c.ok && "border-bad/30 bg-bad-soft",
             )}
           >
-            <Attr percentile={player.percentiles[c.metric]} metric={c.metric} player={player} />
             <span>
-              <b className="block text-sm font-semibold">{METRICS[c.metric].short}</b>
-              <small className="text-[12.5px] text-muted-foreground">{ordinal(player.percentiles[c.metric])} percentile</small>
+              <b className="block text-sm font-semibold">{c.label}</b>
+              <small className="text-[12.5px] text-muted-foreground">{c.value ?? "not in his stats"}</small>
             </span>
-            <em
-              className={cn(
-                "col-start-2 inline-flex items-center gap-1 text-[12.5px] font-semibold whitespace-nowrap not-italic sm:col-start-auto",
-                c.ok ? "text-good" : "text-bad",
-              )}
-            >
+            <em className={cn("inline-flex items-center gap-1 text-[12.5px] font-semibold whitespace-nowrap not-italic", c.ok ? "text-good" : "text-bad")}>
               {c.ok ? <Check className="size-3.5" aria-hidden /> : <AlertTriangle className="size-3.5" aria-hidden />}
               {c.ok ? "Checked" : "Flagged"}
             </em>
           </li>
         ))}
       </ul>
-      <figcaption className="mt-3 text-[12.5px] text-faint">Example: calling his weakest stat a strength gets flagged.</figcaption>
+      <figcaption className="mt-3 text-[12.5px] text-faint">Example: a claim resting on a stat he doesn't have gets flagged.</figcaption>
     </figure>
   );
 }
 
-function AssistantShowcase({ player }: { player?: PlayerProfile }) {
+function AssistantShowcase({ player }: { player?: ScoutPlayer }) {
   const name = player?.name ?? "the top centre-back";
   const steps = [
-    { icon: UserRound, verb: "Opened", rest: name },
-    { icon: Search, verb: "Searched", rest: "similar profile, under 60% of his value" },
+    { icon: Search, verb: "Searched", rest: `${name} market value` },
+    { icon: Search, verb: "Searched", rest: "similar centre-backs under €20m" },
     { icon: LayoutList, verb: "Put on the board", rest: "5 cheaper alternatives" },
   ];
   return (
     <figure className="mt-auto grid gap-3" aria-label="Example assistant conversation">
       <p className="max-w-[92%] justify-self-end rounded-2xl rounded-br-sm bg-panel-3 px-3.5 py-2.5 text-sm">Find me a cheaper version of {name}.</p>
       <ul className="grid gap-2 rounded-xl border bg-background px-3.5 py-3">
-        {steps.map(({ icon: Icon, verb, rest }) => (
-          <li key={verb} className="flex items-center gap-2 text-[13px] text-muted-foreground">
+        {steps.map(({ icon: Icon, verb, rest }, i) => (
+          <li key={i} className="flex items-center gap-2 text-[13px] text-muted-foreground">
             <Icon className="size-[15px] flex-none text-brand-strong" aria-hidden />
             <span>
               <b className="font-semibold text-foreground">{verb}</b> {rest}
