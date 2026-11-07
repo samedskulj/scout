@@ -1,0 +1,12 @@
+node_modules
+.next
+out
+next-env.d.ts
+*.tsbuildinfo
+dist
+.env
+.env.*
+!.env.example
+.llm-cache
+*.log
+.vercel

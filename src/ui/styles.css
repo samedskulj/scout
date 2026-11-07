@@ -1,0 +1,186 @@
+/* Scout Copilot: neutral graphite surfaces, one indigo accent (brand, links, selection), white primary actions,
+   and a separate four-step data ramp for 1-20 attributes. */
+:root {
+  /* Neutrals: ground < panel < panel-2 < panel-3, each a step lighter. */
+  --ground: #0a0b0e;
+  --panel: #111317;
+  --panel-2: #171a1f;
+  --panel-3: #1e2228;
+  --line: #24282f;
+  --line-strong: #31363e;
+  /* Text */
+  --text: #f3f4f6;
+  --text-muted: #a4aab4;
+  --faint: #868c97;
+  /* App header */
+  --chrome: #0e1013;
+  --chrome-line: #24282f;
+  --chrome-ink: #c9ced6;
+  /* Brand accent: links, focus, selection, the selected player */
+  --brand: #7c86ff;
+  --brand-strong: #959dff;
+  --brand-soft: rgb(124 134 255 / 0.14);
+  --brand-ink: #0a0b0e;
+  /* Primary action: white on graphite */
+  --primary: #f3f4f6;
+  --primary-hover: #ffffff;
+  --primary-ink: #0a0b0e;
+
+  /* Attribute ramp, 1-20. The number is always printed; colour is a second signal. */
+  --attr-poor: #8792a8;
+  --attr-fair: #dcbc86;
+  --attr-good: #5fc285;
+  --attr-excellent: #cde65a;
+  --attr-poor-bg: rgb(135 146 168 / 0.12);
+  --attr-fair-bg: rgb(220 188 134 / 0.13);
+  --attr-good-bg: rgb(95 194 133 / 0.14);
+  --attr-excellent-bg: rgb(205 230 90 / 0.15);
+
+  /* Status */
+  --good: #5fc285;
+  --good-soft: rgb(95 194 133 / 0.14);
+  --warn: #e9b35a;
+  --warn-soft: rgb(233 179 90 / 0.14);
+  --bad: #f08a7a;
+  --bad-soft: rgb(240 138 122 / 0.14);
+  --info: #67c7e0;
+  --info-soft: rgb(103 199 224 / 0.12);
+
+  --pitch-a: #15322a;
+  --pitch-b: #183830;
+  --chalk: rgb(243 244 246 / 0.5);
+
+  /* --radius (8px) and the font variables are defined in src/app/globals.css. */
+  --radius-app-sm: 6px;
+  color-scheme: dark;
+}
+
+html, body { height: 100%; }
+body {
+  background: var(--ground);
+  color: var(--text);
+  font: 14px/1.45 var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+}
+::selection { background: var(--brand); color: var(--brand-ink); }
+:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
+* { scrollbar-width: thin; scrollbar-color: var(--line-strong) transparent; }
+code, pre, .mono { font-family: var(--font-mono); font-size: 12px; }
+
+/* Element defaults for the dense workspace at /app .
+   They are scoped so they never fight Tailwind utilities on the public pages. */
+.shell :is(h1, h2, h3) { margin: 0; line-height: 1.2; }
+.shell h2 { font: 600 12px/1.2 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--text-muted); }
+.shell a { color: var(--brand-strong); text-underline-offset: 3px; }
+.muted { color: var(--text-muted); }
+.faint { color: var(--faint); }
+.small { font-size: 12px; }
+.cond { font-family: var(--font-cond); }
+.row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+.stack { display: flex; flex-direction: column; gap: 12px; }
+.spread { justify-content: space-between; }
+
+/* ---------- Shell ---------- */
+.shell { height: 100%; display: grid; grid-template-rows: auto 1fr; }
+.masthead {
+  display: flex; align-items: stretch; gap: 28px;
+  background: var(--chrome);
+  border-bottom: 1px solid var(--chrome-line);
+  padding: 0 20px;
+  min-height: 52px;
+}
+.brand { display: flex; align-items: center; gap: 10px; color: var(--chrome-ink); }
+.brand-mark { width: 26px; height: 26px; flex: none; display: block; }
+.brand h1 { font: 650 15px/1 var(--font-sans); letter-spacing: -0.01em; color: var(--text); }
+.brand p { font-size: 12px; color: var(--faint); margin-top: 2px; }
+.tabs { display: flex; align-items: center; gap: 2px; margin-right: auto; }
+.tabs button {
+  border: 0; background: none; color: var(--text-muted); font: 500 13.5px/1 var(--font-sans);
+  padding: 8px 12px; border-radius: var(--radius-app-sm); cursor: pointer;
+  transition: background-color 150ms ease-out, color 150ms ease-out;
+}
+.tabs button:hover { color: var(--text); background: var(--panel-2); }
+.tabs button.active { color: var(--text); background: var(--panel-3); }
+.masthead .engine { align-self: center; }
+.shell main { min-height: 0; }
+
+/* ---------- Panels ---------- */
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; min-width: 0; }
+.card-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; flex-wrap: wrap; }
+
+/* ---------- Buttons ---------- */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 7px;
+  border-radius: var(--radius-app-sm); padding: 8px 14px;
+  font: 550 13.5px/1.1 var(--font-sans);
+  cursor: pointer; border: 1px solid transparent; white-space: nowrap;
+  transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
+}
+.btn svg { width: 15px; height: 15px; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: var(--primary); color: var(--primary-ink); }
+.btn-primary:hover:not(:disabled) { background: var(--primary-hover); }
+.btn-secondary { background: var(--panel-2); color: var(--text); border-color: var(--line-strong); }
+.btn-secondary:hover:not(:disabled) { background: var(--panel-3); }
+.btn-ghost { background: transparent; color: var(--text-muted); }
+.btn-ghost:hover:not(:disabled) { background: var(--panel-2); color: var(--text); }
+.spinner { width: 12px; height: 12px; border-radius: 50%; border: 2px solid currentColor; border-right-color: transparent; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ---------- Segmented ---------- */
+.segmented { display: inline-flex; background: var(--ground); border: 1px solid var(--line); border-radius: var(--radius-app-sm); padding: 3px; gap: 2px; }
+.segmented button {
+  border: 0; background: none; color: var(--text-muted); padding: 6px 12px; border-radius: 4px;
+  font: 500 13px/1 var(--font-sans); cursor: pointer;
+}
+.segmented button:hover:not(:disabled) { color: var(--text); }
+.segmented button.active { background: var(--panel-3); color: var(--text); box-shadow: 0 1px 2px rgb(0 0 0 / 0.4); }
+.segmented button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* ---------- Badges ---------- */
+.badge {
+  display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px;
+  font: 550 12px/1.3 var(--font-sans); white-space: nowrap;
+}
+.badge svg { width: 12px; height: 12px; }
+.badge-neutral { background: var(--panel-3); color: var(--text-muted); }
+.badge-good { background: var(--good-soft); color: var(--good); }
+.badge-warn { background: var(--warn-soft); color: var(--warn); }
+.badge-bad { background: var(--bad-soft); color: var(--bad); }
+.badge-info { background: var(--info-soft); color: var(--info); }
+.badge-accent { background: var(--brand-soft); color: var(--brand); }
+
+/* ---------- Tables ---------- */
+.shell table { width: 100%; border-collapse: collapse; }
+.shell th {
+  text-align: left; font: 600 11.5px/1 var(--font-sans); letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--faint); padding: 8px 8px; border-bottom: 1px solid var(--line); white-space: nowrap;
+}
+.shell td { padding: 7px 8px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.num { text-align: right; }
+
+/* ---------- Forms ---------- */
+.shell :is(textarea, input, select) {
+  font: inherit; color: var(--text); background: var(--ground);
+  border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 8px 10px; width: 100%;
+}
+.shell :is(input, textarea)::placeholder { color: var(--faint); }
+.shell :is(textarea, input) { caret-color: var(--brand); }
+.shell :is(textarea, input, select):focus { outline: none; border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+
+.error-note { background: var(--bad-soft); color: var(--bad); padding: 8px 12px; border-radius: var(--radius); }
+.empty { color: var(--text-muted); text-align: center; padding: 32px 16px; border: 1px dashed var(--line-strong); border-radius: var(--radius); }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* Account controls in the app masthead */
+.account { align-self: center; display: flex; align-items: center; gap: 12px; }
+.account-email { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-muted); font-size: 13px; }
+.account-out { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--text); border-radius: 6px; padding: 6px 10px; font: 500 13px/1 var(--font-sans); cursor: pointer; transition: background-color 150ms ease-out; }
+.account-out:hover { background: var(--panel-3); }
+.account-out svg { width: 14px; height: 14px; }
+.brand-home { display: inline-flex; }
+.auth-loading { min-height: 100%; }

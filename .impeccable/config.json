@@ -1,0 +1,68 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "design-system-font",
+        "value": "condensed",
+        "createdAt": "2026-11-07T14:11:21.567Z",
+        "reason": "Claude triage: the value is the documented Barlow Condensed face (DESIGN.md typography), misread from the CSS font shorthand"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pipeline.html"
+        ],
+        "createdAt": "2026-11-07T14:21:44.002Z",
+        "reason": "Claude triage: unshipped decision-round sketch, not part of the app"
+      },
+      {
+        "rule": "skipped-heading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pipeline.html"
+        ],
+        "createdAt": "2026-11-07T14:21:44.143Z",
+        "reason": "Claude triage: unshipped decision-round sketch, not part of the app"
+      },
+      {
+        "rule": "tight-leading",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/try-it.html"
+        ],
+        "createdAt": "2026-11-07T14:21:44.286Z",
+        "reason": "Claude triage: unshipped decision-round sketch, not part of the app"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/pipeline.html"
+        ],
+        "createdAt": "2026-11-07T14:40:42.279Z",
+        "reason": "Claude triage: unshipped decision-round sketch from the replaced design; not part of the app"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/try-it.html"
+        ],
+        "createdAt": "2026-11-07T14:40:42.438Z",
+        "reason": "Claude triage: unshipped decision-round sketch from the replaced design; not part of the app"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "*",
+        "files": [
+          ".impeccable/mocks/decision/deadline-day.html"
+        ],
+        "createdAt": "2026-11-07T14:40:42.594Z",
+        "reason": "Claude triage: unshipped decision-round sketch from the replaced design; not part of the app"
+      }
+    ]
+  }
+}

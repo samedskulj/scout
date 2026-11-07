@@ -1,0 +1,18 @@
+[
+  { "query": "Left-footed centre-back under 24 who is comfortable on the ball, max £30m",
+    "expect": { "positions": ["CB"], "foot": "left", "max_age": 23, "max_value_m": 30, "metrics_any": [["prog_passes", "pass_pct"]] } },
+  { "query": "Pressing striker under 26 from the Eredivisie or Liga Portugal",
+    "expect": { "positions": ["ST"], "max_age": 25, "leagues": ["Netherlands 1", "Portugal 1"], "metrics_any": [["recoveries", "tackles_int"]] } },
+  { "query": "A cheaper replacement for Unai Echeverría",
+    "expect": { "similar_to": "Unai Echeverría" } },
+  { "query": "Creative number 10 who can dribble, under £20m",
+    "expect": { "positions": ["AM"], "max_value_m": 20, "metrics_any": [["key_passes", "xa"], ["dribbles"]] } },
+  { "query": "A target man who wins his headers, ideally with Premier League experience",
+    "expect": { "positions": ["ST"], "leagues": ["England 1"], "metrics_any": [["aerial_pct"]] } },
+  { "query": "Young Brazilian winger who beats his man 1v1",
+    "expect": { "positions": ["W"], "max_age": 23, "nationalities": ["Brazil"], "metrics_any": [["dribbles"]] } },
+  { "query": "Experienced holding midfielder to sit in front of the back four and win the ball back",
+    "expect": { "positions": ["DM"], "min_age": 27, "metrics_any": [["tackles_int", "recoveries"]] } },
+  { "query": "Right-back from the Championship who gets forward and creates chances",
+    "expect": { "positions": ["FB"], "foot": "right", "leagues": ["England 2"], "metrics_any": [["key_passes", "xa"]] } }
+]

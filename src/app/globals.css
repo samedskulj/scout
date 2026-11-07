@@ -1,0 +1,151 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/* The workspace's hand-written CSS sits in the components layer: it beats Tailwind's preflight,
+   and any Tailwind utility still wins over it. Its colour tokens (--ground, --panel, --brand, attribute
+   ramp, status colours) are defined in styles.css and exposed to Tailwind below. */
+@import "../ui/styles.css" layer(components);
+@import "../scout.css" layer(components);
+
+@custom-variant dark (&:is(.dark *));
+
+/* Scout Copilot is dark-only: graphite surfaces, one indigo brand colour, white primary actions.
+   shadcn/ui's semantic tokens map onto the design tokens in DESIGN.md. */
+:root {
+  --background: #0a0b0e; /* ground */
+  --foreground: #f3f4f6; /* text */
+  --card: #111317; /* panel */
+  --card-foreground: #f3f4f6;
+  --popover: #111317;
+  --popover-foreground: #f3f4f6;
+  --primary: #f3f4f6; /* White Action Rule: primary buttons are white with graphite text */
+  --primary-foreground: #0a0b0e;
+  --secondary: #171a1f; /* panel-2 */
+  --secondary-foreground: #f3f4f6;
+  --muted: #171a1f;
+  --muted-foreground: #a4aab4; /* muted text */
+  --accent: #1e2228; /* shadcn's "accent" is the hover surface (panel-3), not the brand colour */
+  --accent-foreground: #f3f4f6;
+  --destructive: #f08a7a;
+  --border: #24282f; /* line */
+  --input: #31363e; /* line-strong */
+  --ring: #7c86ff; /* focus is indigo */
+  --chart-1: #7c86ff;
+  --chart-2: #67c7e0;
+  --chart-3: #5fc285;
+  --chart-4: #e9b35a;
+  --chart-5: #f08a7a;
+  --radius: 8px;
+  --sidebar: #111317;
+  --sidebar-foreground: #f3f4f6;
+  --sidebar-primary: #7c86ff;
+  --sidebar-primary-foreground: #0a0b0e;
+  --sidebar-accent: #1e2228;
+  --sidebar-accent-foreground: #f3f4f6;
+  --sidebar-border: #24282f;
+  --sidebar-ring: #7c86ff;
+
+  /* Fonts. Satoshi and Cabinet Grotesk come from Fontshare (linked in src/app/layout.tsx);
+     Barlow Condensed and Geist Mono are self-hosted by next/font. Swap a family here to restyle everything. */
+  --font-sans: "Satoshi", ui-sans-serif, system-ui, "Segoe UI", sans-serif;
+  --font-heading: "Cabinet Grotesk", "Satoshi", ui-sans-serif, system-ui, sans-serif;
+  --font-cond: var(--font-barlow-condensed), "Satoshi", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "Cascadia Code", Consolas, monospace;
+}
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-heading: var(--font-heading);
+  --font-cond: var(--font-cond);
+  --font-mono: var(--font-mono);
+
+  /* shadcn/ui semantic colours */
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Scout Copilot design tokens (values in src/ui/styles.css) */
+  --color-ground: var(--ground);
+  --color-panel: var(--panel);
+  --color-panel-2: var(--panel-2);
+  --color-panel-3: var(--panel-3);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-faint: var(--faint);
+  --color-brand: var(--brand);
+  --color-brand-strong: var(--brand-strong);
+  --color-brand-soft: var(--brand-soft);
+  --color-brand-ink: var(--brand-ink);
+  --color-good: var(--good);
+  --color-good-soft: var(--good-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-bad: var(--bad);
+  --color-bad-soft: var(--bad-soft);
+  --color-info: var(--info);
+  --color-info-soft: var(--info-soft);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+}
+
+/* Public-site container: 1200px with 16px gutters on phones, 32px from tablet up. */
+@utility container {
+  width: 100%;
+  margin-inline: auto;
+  padding-inline: 1rem;
+  max-width: 75rem;
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  html {
+    @apply font-sans;
+  }
+}

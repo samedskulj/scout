@@ -1,0 +1,829 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-07T14:39:48.922Z",
+  "title": "Design System: Scout Copilot",
+  "extensions": {
+    "colorMeta": {
+      "ground": {
+        "role": "neutral",
+        "displayName": "Night Ground",
+        "canonical": "oklch(15.0% 0.007 271.0)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#232427",
+          "#3e4043",
+          "#5c5d61",
+          "#7f8084",
+          "#a3a4a9",
+          "#c9cacd",
+          "#eeeeef"
+        ]
+      },
+      "panel": {
+        "role": "neutral",
+        "displayName": "Graphite Panel",
+        "canonical": "oklch(18.6% 0.009 264.3)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222428",
+          "#3d4045",
+          "#5b5e63",
+          "#7d8086",
+          "#a2a5aa",
+          "#c9cace",
+          "#eeeeef"
+        ]
+      },
+      "panel-2": {
+        "role": "neutral",
+        "displayName": "Raised Graphite",
+        "canonical": "oklch(21.7% 0.011 260.7)",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#212429",
+          "#3c4046",
+          "#5a5e64",
+          "#7c8087",
+          "#a1a5ab",
+          "#c8cbcf",
+          "#eeeef0"
+        ]
+      },
+      "panel-3": {
+        "role": "neutral",
+        "displayName": "Top Graphite",
+        "canonical": "oklch(25.0% 0.013 258.4)",
+        "tonalRamp": [
+          "#090b0e",
+          "#21242a",
+          "#3c4047",
+          "#595e65",
+          "#7c8188",
+          "#a0a5ad",
+          "#c8cbcf",
+          "#edeef0"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(27.6% 0.014 261.7)",
+        "tonalRamp": [
+          "#090b0e",
+          "#21242a",
+          "#3c4047",
+          "#595e66",
+          "#7c8089",
+          "#a0a5ae",
+          "#c8cbd0",
+          "#edeef0"
+        ]
+      },
+      "line-strong": {
+        "role": "neutral",
+        "displayName": "Strong Hairline",
+        "canonical": "oklch(33.1% 0.016 259.8)",
+        "tonalRamp": [
+          "#090b0f",
+          "#20242b",
+          "#3b4048",
+          "#585e67",
+          "#7b818a",
+          "#9fa5af",
+          "#c7cbd0",
+          "#edeef0"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "Paper White",
+        "canonical": "oklch(96.7% 0.003 264.5)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232425",
+          "#3f4041",
+          "#5d5e5f",
+          "#7f8082",
+          "#a4a4a6",
+          "#cacacb",
+          "#eeeeef"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Ash",
+        "canonical": "oklch(73.6% 0.016 260.7)",
+        "tonalRamp": [
+          "#090b0f",
+          "#20242b",
+          "#3b4048",
+          "#595e67",
+          "#7b818a",
+          "#9fa5af",
+          "#c7cbd0",
+          "#edeef0"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "Smoke",
+        "canonical": "oklch(63.9% 0.018 262.7)",
+        "tonalRamp": [
+          "#090b0f",
+          "#20242c",
+          "#3b4049",
+          "#585e68",
+          "#7b808b",
+          "#9fa5b0",
+          "#c7cbd1",
+          "#edeef1"
+        ]
+      },
+      "chrome": {
+        "role": "neutral",
+        "displayName": "Header Graphite",
+        "canonical": "oklch(17.2% 0.007 258.4)",
+        "tonalRamp": [
+          "#0a0b0d",
+          "#222427",
+          "#3d4044",
+          "#5b5e62",
+          "#7e8084",
+          "#a2a5a9",
+          "#c9cbcd",
+          "#eeeeef"
+        ]
+      },
+      "chrome-line": {
+        "role": "neutral",
+        "displayName": "Header Hairline",
+        "canonical": "oklch(27.6% 0.014 261.7)",
+        "tonalRamp": [
+          "#090b0e",
+          "#21242a",
+          "#3c4047",
+          "#595e66",
+          "#7c8089",
+          "#a0a5ae",
+          "#c8cbd0",
+          "#edeef0"
+        ]
+      },
+      "chrome-ink": {
+        "role": "neutral",
+        "displayName": "Header Ink",
+        "canonical": "oklch(85.0% 0.012 259.8)",
+        "tonalRamp": [
+          "#0a0b0e",
+          "#21242a",
+          "#3c4046",
+          "#5a5e65",
+          "#7c8088",
+          "#a0a5ac",
+          "#c8cbcf",
+          "#edeef0"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "Signal Indigo",
+        "canonical": "oklch(67.0% 0.177 276.9)",
+        "tonalRamp": [
+          "#070031",
+          "#1b006f",
+          "#302799",
+          "#494bbe",
+          "#6970e7",
+          "#8b96ff",
+          "#bac5ff",
+          "#e9edff"
+        ]
+      },
+      "accent-strong": {
+        "role": "primary",
+        "displayName": "Bright Indigo",
+        "canonical": "oklch(73.1% 0.141 278.7)",
+        "tonalRamp": [
+          "#070429",
+          "#1c1160",
+          "#333088",
+          "#4f50ab",
+          "#6f74d3",
+          "#929afa",
+          "#bec6ff",
+          "#eaedff"
+        ]
+      },
+      "accent-soft": {
+        "role": "primary",
+        "displayName": "Indigo Wash",
+        "canonical": "rgb(124 134 255 / 0.14)",
+        "tonalRamp": [
+          "#070031",
+          "#1b006f",
+          "#302799",
+          "#494bbe",
+          "#6970e7",
+          "#8b96ff",
+          "#bac5ff",
+          "#e9edff"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "Graphite Ink",
+        "canonical": "oklch(15.0% 0.007 271.0)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#232427",
+          "#3e4043",
+          "#5c5d61",
+          "#7f8084",
+          "#a3a4a9",
+          "#c9cacd",
+          "#eeeeef"
+        ]
+      },
+      "primary": {
+        "role": "neutral",
+        "displayName": "White Action",
+        "canonical": "oklch(96.7% 0.003 264.5)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232425",
+          "#3f4041",
+          "#5d5e5f",
+          "#7f8082",
+          "#a4a4a6",
+          "#cacacb",
+          "#eeeeef"
+        ]
+      },
+      "primary-hover": {
+        "role": "neutral",
+        "displayName": "White Action Hover",
+        "canonical": "oklch(100.0% 0.000 89.9)",
+        "tonalRamp": [
+          "#0b0b0b",
+          "#242424",
+          "#404040",
+          "#5d5d5d",
+          "#808080",
+          "#a4a4a4",
+          "#cacaca",
+          "#eeeeee"
+        ]
+      },
+      "primary-ink": {
+        "role": "neutral",
+        "displayName": "White Action Ink",
+        "canonical": "oklch(15.0% 0.007 271.0)",
+        "tonalRamp": [
+          "#0b0b0d",
+          "#232427",
+          "#3e4043",
+          "#5c5d61",
+          "#7f8084",
+          "#a3a4a9",
+          "#c9cacd",
+          "#eeeeef"
+        ]
+      },
+      "attr-poor": {
+        "role": "data",
+        "displayName": "Slate (1-5)",
+        "canonical": "oklch(65.9% 0.035 264.3)",
+        "tonalRamp": [
+          "#070b13",
+          "#1c2434",
+          "#364053",
+          "#545e72",
+          "#768096",
+          "#9aa5bb",
+          "#c4cbd8",
+          "#eceef3"
+        ]
+      },
+      "attr-fair": {
+        "role": "data",
+        "displayName": "Sand (6-10)",
+        "canonical": "oklch(81.0% 0.079 80.3)",
+        "tonalRamp": [
+          "#140800",
+          "#361e00",
+          "#553a00",
+          "#755823",
+          "#997b47",
+          "#bea06b",
+          "#dac8aa",
+          "#f3eee4"
+        ]
+      },
+      "attr-good": {
+        "role": "data",
+        "displayName": "Green (11-15)",
+        "canonical": "oklch(73.8% 0.130 154.5)",
+        "tonalRamp": [
+          "#001201",
+          "#003203",
+          "#00521c",
+          "#00723a",
+          "#2e965c",
+          "#5bbc80",
+          "#a5d9b6",
+          "#e3f3e8"
+        ]
+      },
+      "attr-excellent": {
+        "role": "data",
+        "displayName": "Lime (16-20)",
+        "canonical": "oklch(88.0% 0.166 118.5)",
+        "tonalRamp": [
+          "#090e00",
+          "#202a00",
+          "#3a4800",
+          "#566800",
+          "#788c00",
+          "#9bb216",
+          "#c4d38d",
+          "#ecf2dc"
+        ]
+      },
+      "attr-poor-bg": {
+        "role": "data",
+        "displayName": "Slate Tint",
+        "canonical": "rgb(135 146 168 / 0.12)",
+        "tonalRamp": [
+          "#070b13",
+          "#1c2434",
+          "#364053",
+          "#545e72",
+          "#768096",
+          "#9aa5bb",
+          "#c4cbd8",
+          "#eceef3"
+        ]
+      },
+      "attr-fair-bg": {
+        "role": "data",
+        "displayName": "Sand Tint",
+        "canonical": "rgb(220 188 134 / 0.13)",
+        "tonalRamp": [
+          "#140800",
+          "#361e00",
+          "#553a00",
+          "#755823",
+          "#997b47",
+          "#bea06b",
+          "#dac8aa",
+          "#f3eee4"
+        ]
+      },
+      "attr-good-bg": {
+        "role": "data",
+        "displayName": "Green Tint",
+        "canonical": "rgb(95 194 133 / 0.14)",
+        "tonalRamp": [
+          "#001201",
+          "#003203",
+          "#00521c",
+          "#00723a",
+          "#2e965c",
+          "#5bbc80",
+          "#a5d9b6",
+          "#e3f3e8"
+        ]
+      },
+      "attr-excellent-bg": {
+        "role": "data",
+        "displayName": "Lime Tint",
+        "canonical": "rgb(205 230 90 / 0.15)",
+        "tonalRamp": [
+          "#090e00",
+          "#202a00",
+          "#3a4800",
+          "#566800",
+          "#788c00",
+          "#9bb216",
+          "#c4d38d",
+          "#ecf2dc"
+        ]
+      },
+      "good": {
+        "role": "status",
+        "displayName": "Good",
+        "canonical": "oklch(73.8% 0.130 154.5)",
+        "tonalRamp": [
+          "#001201",
+          "#003203",
+          "#00521c",
+          "#00723a",
+          "#2e965c",
+          "#5bbc80",
+          "#a5d9b6",
+          "#e3f3e8"
+        ]
+      },
+      "good-soft": {
+        "role": "status",
+        "displayName": "Good Tint",
+        "canonical": "rgb(95 194 133 / 0.14)",
+        "tonalRamp": [
+          "#001201",
+          "#003203",
+          "#00521c",
+          "#00723a",
+          "#2e965c",
+          "#5bbc80",
+          "#a5d9b6",
+          "#e3f3e8"
+        ]
+      },
+      "warn": {
+        "role": "status",
+        "displayName": "Warn",
+        "canonical": "oklch(79.9% 0.123 77.9)",
+        "tonalRamp": [
+          "#190500",
+          "#401700",
+          "#623300",
+          "#835200",
+          "#a87507",
+          "#ce9a41",
+          "#e4c698",
+          "#f7eddf"
+        ]
+      },
+      "warn-soft": {
+        "role": "status",
+        "displayName": "Warn Tint",
+        "canonical": "rgb(233 179 90 / 0.14)",
+        "tonalRamp": [
+          "#190500",
+          "#401700",
+          "#623300",
+          "#835200",
+          "#a87507",
+          "#ce9a41",
+          "#e4c698",
+          "#f7eddf"
+        ]
+      },
+      "bad": {
+        "role": "status",
+        "displayName": "Bad",
+        "canonical": "oklch(73.9% 0.127 29.9)",
+        "tonalRamp": [
+          "#200000",
+          "#4e0000",
+          "#751910",
+          "#983b2f",
+          "#c05f51",
+          "#e98575",
+          "#f6baaf",
+          "#fde9e6"
+        ]
+      },
+      "bad-soft": {
+        "role": "status",
+        "displayName": "Bad Tint",
+        "canonical": "rgb(240 138 122 / 0.14)",
+        "tonalRamp": [
+          "#200000",
+          "#4e0000",
+          "#751910",
+          "#983b2f",
+          "#c05f51",
+          "#e98575",
+          "#f6baaf",
+          "#fde9e6"
+        ]
+      },
+      "info": {
+        "role": "status",
+        "displayName": "Info / Comparison",
+        "canonical": "oklch(78.0% 0.097 217.0)",
+        "tonalRamp": [
+          "#000f19",
+          "#002c3f",
+          "#004b61",
+          "#006a81",
+          "#258ea6",
+          "#54b3cc",
+          "#a3d4e2",
+          "#e2f2f6"
+        ]
+      },
+      "info-soft": {
+        "role": "status",
+        "displayName": "Info Tint",
+        "canonical": "rgb(103 199 224 / 0.12)",
+        "tonalRamp": [
+          "#000f19",
+          "#002c3f",
+          "#004b61",
+          "#006a81",
+          "#258ea6",
+          "#54b3cc",
+          "#a3d4e2",
+          "#e2f2f6"
+        ]
+      },
+      "pitch-a": {
+        "role": "data",
+        "displayName": "Turf Stripe A",
+        "canonical": "oklch(29.2% 0.038 173.4)",
+        "tonalRamp": [
+          "#030e0a",
+          "#102a22",
+          "#29463e",
+          "#47655c",
+          "#69887e",
+          "#8dada2",
+          "#bdcfc9",
+          "#eaf0ee"
+        ]
+      },
+      "pitch-b": {
+        "role": "data",
+        "displayName": "Turf Stripe B",
+        "canonical": "oklch(31.4% 0.041 175.1)",
+        "tonalRamp": [
+          "#030e0b",
+          "#0d2a23",
+          "#27473e",
+          "#45655c",
+          "#67897f",
+          "#8bada3",
+          "#bcd0ca",
+          "#eaf0ee"
+        ]
+      },
+      "chalk": {
+        "role": "data",
+        "displayName": "Chalk",
+        "canonical": "rgb(243 244 246 / 0.5)",
+        "tonalRamp": [
+          "#0b0b0c",
+          "#232425",
+          "#3f4041",
+          "#5d5e5f",
+          "#7f8082",
+          "#a4a4a6",
+          "#cacacb",
+          "#eeeeef"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "Public-site hero, pricing and closing-panel headlines."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Public-site section headlines."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Player name in the profile; 18-22px variants for report headlines and demo names."
+      },
+      "title-sm": {
+        "displayName": "Small Title",
+        "purpose": "Board title, brand name, Under-the-hood section heads."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All app text, tabular numerals."
+      },
+      "body-lead": {
+        "displayName": "Lead",
+        "purpose": "Public-site section intros; 58ch measure."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "Uppercase pane heads, table headers, brief label, demo step heads."
+      },
+      "button": {
+        "displayName": "Button",
+        "purpose": "App button text."
+      },
+      "numeral": {
+        "displayName": "Numeral",
+        "purpose": "Barlow Condensed for 1-20 attributes, fit scores, ranks, position codes and stat lines only."
+      },
+      "mono": {
+        "displayName": "Mono",
+        "purpose": "Code and env names."
+      }
+    },
+    "shadows": [
+      {
+        "name": "segment-lift",
+        "value": "0 1px 2px rgb(0 0 0 / 0.4)",
+        "purpose": "Active segment in a segmented control."
+      },
+      {
+        "name": "window-float",
+        "value": "0 0 0 1px rgb(0 0 0 / 0.4), 0 40px 80px -20px rgb(0 0 0 / 0.7), 0 0 120px -40px rgb(124 134 255 / 0.35)",
+        "purpose": "Product window on the landing page."
+      },
+      {
+        "name": "showcase-card",
+        "value": "0 40px 80px -30px rgb(0 0 0 / 0.7)",
+        "purpose": "Floating sample card on the login page."
+      },
+      {
+        "name": "plan-glow",
+        "value": "0 40px 80px -40px rgb(124 134 255 / 0.45)",
+        "purpose": "Highlighted pricing plan."
+      },
+      {
+        "name": "focus-halo",
+        "value": "0 0 0 3px var(--accent-soft)",
+        "purpose": "Focused text fields, paired with an indigo border."
+      },
+      {
+        "name": "--shadow (declared, unused)",
+        "value": "0 1px 0 rgb(255 255 255 / 0.04) inset, 0 12px 32px -12px rgb(0 0 0 / 0.6)",
+        "purpose": "Declared in :root but referenced nowhere; not part of the working vocabulary."
+      }
+    ],
+    "motion": [
+      {
+        "name": "state-fast",
+        "value": "150ms ease-out",
+        "purpose": "Colour, background and border transitions on controls (120ms on table rows, 160ms on public pills)."
+      },
+      {
+        "name": "row-settle",
+        "value": "260ms cubic-bezier(0.16, 1, 0.3, 1), 18ms stagger",
+        "purpose": "Shortlist rows rising 6px into place when results change (320ms / 45ms in the public demo)."
+      },
+      {
+        "name": "pulse",
+        "value": "1.2s ease-in-out infinite",
+        "purpose": "Thinking indicator and skeletons."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0.01ms",
+        "purpose": "All animation and transition durations collapse under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "app-two-column",
+        "value": "1279px"
+      },
+      {
+        "name": "public-tablet",
+        "value": "1080px"
+      },
+      {
+        "name": "app-stack",
+        "value": "860px"
+      },
+      {
+        "name": "public-mobile",
+        "value": "760px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "App Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "White main action in the app workspace (e.g. Find players).",
+      "html": "<button class=\"ds-btn ds-btn-primary\">Find players</button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; gap: 7px; border-radius: var(--radius-sm); padding: 8px 14px; font: 550 13.5px/1.1 var(--font); border: 1px solid transparent; cursor: pointer; transition: background-color 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out; } .ds-btn-primary { background: var(--primary); color: var(--primary-ink); } .ds-btn-primary:hover { background: var(--primary-hover); } .ds-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "App Secondary and Ghost Buttons",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Raised graphite secondary and transparent ghost actions.",
+      "html": "<div style=\"display:flex;gap:8px\"><button class=\"ds-btn ds-btn-secondary\">Compare</button><button class=\"ds-btn ds-btn-ghost\">Clear</button></div>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; border-radius: var(--radius-sm); padding: 8px 14px; font: 550 13.5px/1.1 var(--font); border: 1px solid transparent; cursor: pointer; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-btn-secondary { background: var(--panel-2); color: var(--text); border-color: var(--line-strong); } .ds-btn-secondary:hover { background: var(--panel-3); } .ds-btn-ghost { background: transparent; color: var(--muted); } .ds-btn-ghost:hover { background: var(--panel-2); color: var(--text); } .ds-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Public Pill Buttons",
+      "kind": "button",
+      "refersTo": "button-pill-primary",
+      "description": "Pill-shaped primary and secondary actions on the public site.",
+      "html": "<div style=\"display:flex;gap:12px\"><a class=\"ds-pill ds-pill-primary\" href=\"#\">Open the app <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M5 12h14\"/><path d=\"m12 5 7 7-7 7\"/></svg></a><a class=\"ds-pill ds-pill-secondary\" href=\"#\">See pricing</a></div>",
+      "css": ".ds-pill { display: inline-flex; align-items: center; gap: 8px; height: 38px; padding: 0 16px; border-radius: 999px; border: 1px solid transparent; font: 550 14px/1 var(--font); letter-spacing: -0.005em; text-decoration: none; transition: background-color 160ms ease-out, border-color 160ms ease-out, transform 160ms ease-out; } .ds-pill svg { width: 16px; height: 16px; transition: transform 160ms ease-out; } .ds-pill:hover svg { transform: translateX(2px); } .ds-pill:active { transform: translateY(1px); } .ds-pill-primary { background: var(--primary); color: var(--primary-ink); } .ds-pill-primary:hover { background: var(--primary-hover); } .ds-pill-secondary { background: var(--panel-2); color: var(--text); border-color: var(--line-strong); } .ds-pill-secondary:hover { background: var(--panel-3); } .ds-pill:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Ground-well field with indigo border and halo on focus.",
+      "html": "<input class=\"ds-input\" placeholder=\"Left-footed centre-back under 24, max £30m\" />",
+      "css": ".ds-input { width: 320px; font: 14px/1.45 var(--font); color: var(--text); background: var(--ground); border: 1px solid var(--line-strong); border-radius: var(--radius); padding: 8px 10px; caret-color: var(--accent); transition: border-color 150ms ease-out, box-shadow 150ms ease-out; } .ds-input::placeholder { color: var(--faint); } .ds-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }"
+    },
+    {
+      "name": "App Masthead",
+      "kind": "nav",
+      "refersTo": "tab",
+      "description": "App header with the brand mark and text tabs.",
+      "html": "<header class=\"ds-mast\"><span class=\"ds-brand\"><svg class=\"ds-mark\" viewBox=\"0 0 28 28\" aria-hidden=\"true\"><rect width=\"28\" height=\"28\" rx=\"7\" fill=\"var(--accent)\"/><path d=\"M14 4.5 V23.5\" stroke=\"var(--accent-ink)\" stroke-width=\"2\" stroke-linecap=\"round\"/><circle cx=\"14\" cy=\"14\" r=\"5.2\" fill=\"none\" stroke=\"var(--accent-ink)\" stroke-width=\"2\"/><circle cx=\"14\" cy=\"14\" r=\"1.6\" fill=\"var(--accent-ink)\"/></svg><b>Scout Copilot</b></span><nav class=\"ds-tabs\"><button class=\"is-active\">Scouting</button><button>Under the hood</button></nav></header>",
+      "css": ".ds-mast { display: flex; align-items: center; gap: 28px; background: var(--chrome); border-bottom: 1px solid var(--chrome-line); padding: 0 20px; min-height: 52px; } .ds-brand { display: flex; align-items: center; gap: 10px; color: var(--chrome-ink); } .ds-mark { width: 26px; height: 26px; } .ds-brand b { font: 650 15px/1 var(--font); letter-spacing: -0.01em; color: var(--text); } .ds-tabs { display: flex; gap: 2px; } .ds-tabs button { border: 0; background: none; color: var(--muted); font: 500 13.5px/1 var(--font); padding: 8px 12px; border-radius: var(--radius-sm); cursor: pointer; transition: background-color 150ms ease-out, color 150ms ease-out; } .ds-tabs button:hover { color: var(--text); background: var(--panel-2); } .ds-tabs button.is-active { color: var(--text); background: var(--panel-3); } .ds-tabs button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Filter Chip",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "Removable brief filter; border turns bad on hover.",
+      "html": "<button class=\"ds-chip\">Left foot <svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\"><path d=\"M18 6 6 18\"/><path d=\"m6 6 12 12\"/></svg></button>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-strong); background: var(--panel-2); color: var(--text); border-radius: 5px; padding: 3px 6px 3px 9px; font: 500 12.5px/1.3 var(--font); cursor: pointer; transition: border-color 150ms ease-out; } .ds-chip svg { width: 12px; height: 12px; color: var(--faint); } .ds-chip:hover { border-color: var(--bad); } .ds-chip:hover svg { color: var(--bad); } .ds-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "App panel card: graphite, hairline, 8px.",
+      "html": "<section class=\"ds-card\"><h2 class=\"ds-label\">Shortlist</h2><p>12 players match the brief.</p></section>",
+      "css": ".ds-card { width: 300px; background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 14px; color: var(--text); font: 14px/1.45 var(--font); } .ds-label { margin: 0 0 10px; font: 600 12px/1.2 var(--font); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); } .ds-card p { margin: 0; }"
+    },
+    {
+      "name": "Attribute Cells",
+      "kind": "custom",
+      "refersTo": "attr-excellent",
+      "description": "Signature 1-20 rating cell on the four-band ramp, number always printed.",
+      "html": "<div style=\"display:flex;gap:6px\"><span class=\"ds-attr ds-attr-poor\">4</span><span class=\"ds-attr ds-attr-fair\">9</span><span class=\"ds-attr ds-attr-good\">14</span><span class=\"ds-attr ds-attr-excellent\">18</span></div>",
+      "css": ".ds-attr { display: inline-grid; place-items: center; min-width: 26px; height: 22px; padding: 0 4px; border-radius: 5px; font: 700 15px/1 var(--cond); font-variant-numeric: tabular-nums; } .ds-attr-poor { color: var(--attr-poor); background: var(--attr-poor-bg); } .ds-attr-fair { color: var(--attr-fair); background: var(--attr-fair-bg); } .ds-attr-good { color: var(--attr-good); background: var(--attr-good-bg); } .ds-attr-excellent { color: var(--attr-excellent); background: var(--attr-excellent-bg); }"
+    },
+    {
+      "name": "Shortlist Row",
+      "kind": "custom",
+      "refersTo": "shortlist-row-selected",
+      "description": "Ranked table row; selected row takes the indigo wash and indigo rank and name.",
+      "html": "<table class=\"ds-table\"><tbody><tr><td class=\"ds-rank\">1</td><td><b class=\"ds-name\">Tomas Reyes</b></td><td class=\"ds-fit\">87</td></tr><tr class=\"is-selected\"><td class=\"ds-rank\">2</td><td><b class=\"ds-name\">Ilyas Okafor</b></td><td class=\"ds-fit\">84</td></tr></tbody></table>",
+      "css": ".ds-table { width: 360px; border-collapse: collapse; font: 14px/1.45 var(--font); color: var(--text); } .ds-table td { padding: 7px 8px; border-bottom: 1px solid var(--line); } .ds-table tr { cursor: pointer; transition: background-color 120ms ease-out; } .ds-table tr:hover { background: var(--panel-2); } .ds-table tr.is-selected { background: var(--accent-soft); } .ds-rank { width: 34px; text-align: center; font: 600 14px/1 var(--cond); color: var(--faint); } .ds-name { font-weight: 600; } .ds-fit { text-align: right; font: 700 18px/1 var(--cond); } tr.is-selected .ds-rank, tr.is-selected .ds-name { color: var(--accent); }"
+    },
+    {
+      "name": "Accent Badge",
+      "kind": "chip",
+      "refersTo": "badge-accent",
+      "description": "Pill badge in the indigo wash; status badges follow the same shape with status tints.",
+      "html": "<div style=\"display:flex;gap:6px\"><span class=\"ds-badge ds-badge-accent\">Claude</span><span class=\"ds-badge ds-badge-good\">Checked</span><span class=\"ds-badge ds-badge-bad\">Unsupported</span></div>",
+      "css": ".ds-badge { display: inline-flex; align-items: center; gap: 5px; padding: 3px 8px; border-radius: 999px; font: 550 12px/1.3 var(--font); } .ds-badge-accent { background: var(--accent-soft); color: var(--accent); } .ds-badge-good { background: var(--good-soft); color: var(--good); } .ds-badge-bad { background: var(--bad-soft); color: var(--bad); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Open Scouting Console",
+    "overview": "Scout Copilot follows the modern product-site conventions of the Linear and Vercel class, chosen by the user on 2026-11-07 in place of the earlier claret, amber and navy club-office world. Surfaces are graphite and step lighter as they come forward. Hairline borders separate them. One indigo accent marks the brand, focus, selection and the selected player. Primary actions are white on graphite. The only other strong colour belongs to the data: a four-band ramp for 1–20 attributes, always printed beside the number.\n\nThe app at `/app` is a dense desk tool: a full-width brief bar, then three panes (Claude's read and the assistant, the ranked shortlist, the player profile). It uses tight 6–8px corners, 13–15px Inter, and condensed numerals in every rating cell. The public site uses the same palette and type but more space: pill buttons, 10–24px cards, large tight-tracked Inter headlines, faint indigo radial glows, and the real product UI (a live demo in a window frame) as its only imagery.\n\nFootball-manager vocabulary carries the domain. Players read as attribute sheets with ability stars, a pitch shows positions, and Barlow Condensed is kept only for those numerals.",
+    "keyCharacteristics": [
+      "Graphite neutrals in four tonal steps (ground, panel, panel-2, panel-3) with two hairline weights.",
+      "A single indigo accent, plus a strong variant for text-on-dark and a 14% soft tint for fills.",
+      "White primary buttons; indigo is never the main call-to-action fill except the chat send button.",
+      "A four-band attribute ramp (slate, sand, green, lime) kept apart from the status colours.",
+      "Inter Variable throughout; Barlow Condensed only for rating numerals and stat figures.",
+      "Flat in the app, with soft long shadows and indigo glows only on the public site."
+    ],
+    "rules": [
+      {
+        "name": "The One Voice Rule",
+        "body": "Indigo is the only hue that means \"brand\", \"you are here\" or \"selected\". Do not add a second accent.",
+        "section": "colors"
+      },
+      {
+        "name": "The White Action Rule",
+        "body": "The main action on any screen is a white button with graphite text. Indigo marks state, not the next step.",
+        "section": "colors"
+      },
+      {
+        "name": "The Number First Rule",
+        "body": "An attribute colour never appears without its 1–20 number printed in it. The ramp is a second signal and is not used outside rating cells.",
+        "section": "colors"
+      },
+      {
+        "name": "The Condensed Is For Numbers Rule",
+        "body": "Barlow Condensed sets numerals, ranks, position codes and stat lines. It never sets headings or body copy.",
+        "section": "typography"
+      },
+      {
+        "name": "The Flat Desk Rule",
+        "body": "App surfaces separate by tone and hairline, not shadow. Long shadows and glows belong to the public site.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** take every colour from the `:root` tokens in `src/ui/styles.css`. If a translucent tint is needed, add a token next to its parent colour.",
+      "**Do** keep indigo for brand, focus, selection and the selected player. Use accent-strong when indigo is small text or an icon on the public site.",
+      "**Do** print the 1–20 number in every attribute cell and colour it with the ramp from `shared/attributes.ts` (1–5, 6–10, 11–15, 16–20).",
+      "**Do** use 6px buttons and 8px cards and fields in the app, and pills with 10–24px cards on the public site.",
+      "**Do** separate app surfaces by graphite step and 1px hairline.",
+      "**Do** show the real product UI as the public site's imagery."
+    ],
+    "donts": [
+      "**Don't** add a second accent hue or use status colours as decoration.",
+      "**Don't** fill primary call-to-action buttons with indigo; they are white (the chat send button is the one exception).",
+      "**Don't** use the attribute ramp for status, or status colours for ratings.",
+      "**Don't** set headings or prose in Barlow Condensed.",
+      "**Don't** bring the retired claret, amber or navy values back."
+    ]
+  }
+}

@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Your week, then ours</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow:wght@400;500;600&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0}
+body{width:1440px;height:900px;overflow:hidden;background:#0b111c;color:#ece8df;font:15px/1.45 Barlow,sans-serif;position:relative}
+nav{height:60px;background:#6e1733;display:flex;align-items:center;gap:32px;padding:0 48px;position:relative;z-index:2}
+nav b{font:700 22px/1 "Barlow Condensed";text-transform:uppercase;margin-right:auto}
+nav a{color:#f6dfe5;font:600 15px/1 "Barlow Condensed";letter-spacing:.06em;text-transform:uppercase}
+.split{display:grid;grid-template-columns:1fr 1fr;height:840px}
+.before{background:#141922;padding:40px 36px 0 48px;filter:saturate(0)}
+.after{background:#131b2a;padding:40px 48px 0 36px;border-left:3px solid #6e1733}
+.lab{font:600 13px/1 "Barlow Condensed";letter-spacing:.08em;text-transform:uppercase;color:#808ca3;margin-bottom:14px}
+.sheet{display:grid;grid-template-columns:28px 170px 60px 70px 70px 70px 1fr;font-size:13px;color:#98a3b8}
+.sheet div{border:1px solid #2a2f39;padding:6px 7px;height:32px;overflow:hidden;white-space:nowrap}
+.sheet .h{background:#1e222a;color:#c9ced8;font-weight:600}
+.sheet .y{background:#3a3a2a}.sheet .r{background:#3a2626}
+.note{position:absolute;left:330px;top:520px;width:220px;background:#d9d2a0;color:#2a2a1a;padding:12px;font-size:14px;transform:rotate(-3deg);filter:saturate(0)}
+.mid{position:absolute;left:50%;top:150px;transform:translateX(-50%);width:640px;text-align:center;z-index:3;background:#0b111c;border:1px solid #34425e;border-radius:4px;padding:28px 32px}
+h1{font:700 46px/1.05 "Barlow Condensed"}
+.mid p{color:#98a3b8;margin:12px 0 20px;font-size:16px}
+.btn{display:inline-block;background:#f3ad3a;color:#1d1406;padding:13px 26px;border-radius:4px;font:700 18px/1 "Barlow Condensed";text-transform:uppercase;letter-spacing:.05em}
+.prof{margin-top:330px}
+.name{font:700 32px/1 "Barlow Condensed"}.club{color:#98a3b8;margin:4px 0 16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 28px}
+.row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #26324a;padding:6px 0;font-size:14px}
+.row em{font-style:normal;color:#98a3b8;font:500 13px/1 "Barlow Condensed";margin-left:auto;margin-right:10px}
+.a{display:inline-grid;place-items:center;min-width:28px;height:24px;border-radius:3px;font:700 16px/1 "Barlow Condensed"}
+.ex{color:#cde65a;background:rgba(205,230,90,.15)}.gd{color:#5fc285;background:rgba(95,194,133,.14)}.fr{color:#dcbc86;background:rgba(220,188,134,.13)}.pr{color:#8792a8;background:rgba(135,146,168,.12)}
+</style></head><body>
+<nav><b>Scout Copilot</b><a>Product</a><a>Pricing</a><a>Sign in</a></nav>
+<div class="split">
+  <div class="before">
+    <div class="lab">Your week now</div>
+    <div class="sheet">
+      <div class="h">#</div><div class="h">Player</div><div class="h">Age</div><div class="h">Value</div><div class="h">PrgP</div><div class="h">Tkl</div><div class="h">Notes</div>
+      <div>1</div><div>V. Villalba</div><div>25</div><div>47</div><div>3.35</div><div>5.11</div><div>too expensive?</div>
+      <div>2</div><div>A. Antunes</div><div class="y">24</div><div>16.5</div><div class="y">4.51</div><div>2.92</div><div>check vid</div>
+      <div>3</div><div>A. Echeverria</div><div>22</div><div class="y">18.5</div><div>3.99</div><div class="r">1.26</div><div>left foot??</div>
+      <div>4</div><div>M. Gaspar</div><div>19</div><div>12.5</div><div>4.1</div><div>3.3</div><div></div>
+      <div>5</div><div>D. Fonseca</div><div class="r">20</div><div>4.5</div><div>3.8</div><div>2.1</div><div>ask Tom</div>
+      <div>6</div><div>J. Thornton</div><div>25</div><div>9</div><div class="y">2.7</div><div>3.9</div><div>FB not CB</div>
+      <div>7</div><div>…</div><div></div><div></div><div></div><div></div><div>per 90 or total?</div>
+      <div>8</div><div></div><div></div><div></div><div></div><div></div><div></div>
+      <div>9</div><div></div><div></div><div></div><div></div><div></div><div></div>
+      <div>10</div><div></div><div></div><div></div><div></div><div></div><div></div>
+      <div>11</div><div></div><div></div><div></div><div></div><div></div><div></div>
+      <div>12</div><div></div><div></div><div></div><div></div><div></div><div></div>
+    </div>
+  </div>
+  <div class="after">
+    <div class="lab">The same brief in Scout Copilot</div>
+    <div class="prof">
+      <div class="name">Adrián Echeverría</div><div class="club">Real Alcora · Spain 1 · Centre-back · 22 · £18.5m</div>
+      <div class="grid">
+        <div class="row">Prog. passes <em>3.99/90 · 85th</em><span class="a ex">17</span></div>
+        <div class="row">Tkl+Int <em>1.26/90 · 3rd</em><span class="a pr">1</span></div>
+        <div class="row">Recoveries <em>6.1/90 · 64th</em><span class="a gd">13</span></div>
+        <div class="row">Aerial % <em>58.2% · 38th</em><span class="a fr">8</span></div>
+        <div class="row">Pass % <em>91.0% · 81st</em><span class="a ex">17</span></div>
+        <div class="row">Carries <em>1.4/90 · 70th</em><span class="a gd">14</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="note">Brief from coach: LEFT foot, under 24, good on ball, budget 30?</div>
+<div class="mid"><h1>Stop rebuilding the shortlist in a spreadsheet.</h1><p>Write the brief once. Scout Copilot ranks every player on the numbers and shows why.</p><span class="btn">Request access</span></div>
+</body></html>
